@@ -147,7 +147,10 @@ a:focus {
     text-transform: uppercase;
 }
 
-.kitlast-field input {
+.kitlast-field input,
+.kitlast-field select,
+.kitlast-field textarea,
+.kitlast-input {
     width: 100%;
     border: 1px solid var(--border);
     border-radius: 12px;
@@ -158,7 +161,10 @@ a:focus {
     background: #fff;
 }
 
-.kitlast-field input:focus {
+.kitlast-field input:focus,
+.kitlast-field select:focus,
+.kitlast-field textarea:focus,
+.kitlast-input:focus {
     border-color: var(--brand-300);
     box-shadow: 0 0 0 3px rgba(0, 106, 78, 0.18);
     outline: none;
@@ -448,12 +454,8 @@ a:focus {
     color: var(--muted);
 }
 
-.kitlast-category-form {
-    background: var(--surface);
-    border: 1px solid rgba(0, 106, 78, 0.12);
-    border-radius: 16px;
-    padding: 24px;
-    box-shadow: 0 10px 28px rgba(17, 53, 44, 0.08);
+.kitlast-section-header + .kitlast-category-list {
+    margin-top: 24px;
 }
 
 /* Modale générique */
@@ -526,7 +528,15 @@ a:focus {
     gap: 16px;
 }
 
+.kitlast-modal__form {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
 .kitlast-modal__form .kitlast-field {
+    display: flex;
+    flex-direction: column;
     gap: 8px;
 }
 
@@ -536,6 +546,19 @@ a:focus {
     color: var(--muted);
     letter-spacing: 0.02em;
     text-transform: uppercase;
+}
+
+.kitlast-modal__form input,
+.kitlast-modal__form select,
+.kitlast-modal__form textarea {
+    box-sizing: border-box;
+    width: 100%;
+}
+
+.kitlast-modal__row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
 }
 
 .kitlast-modal__actions {

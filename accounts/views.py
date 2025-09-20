@@ -3,8 +3,8 @@ from django.contrib.auth.decorators import login_required
 from django.shortcuts import redirect, render
 from django.urls import reverse
 
-from .forms import CategoryForm
-from .models import Category
+from .forms import CategoryForm, ServiceForm
+from .models import Category, Service
 
 @login_required
 def dashboard(request):
@@ -12,6 +12,8 @@ def dashboard(request):
     show_category_form = request.GET.get("show") == "category-form"
     categories = Category.objects.prefetch_related("services").all()
     category_form = CategoryForm()
+    service_form = ServiceForm()
+    show_service_form = request.GET.get("show") == "service-form"
 
     if request.method == "POST":
         action = request.POST.get("action")
@@ -23,6 +25,14 @@ def dashboard(request):
                 category_form.save()
                 redirect_url = f"{reverse('dashboard')}?section=services"
                 return redirect(redirect_url)
+        elif action == "add_service":
+            section = "services"
+            service_form = ServiceForm(request.POST)
+            show_service_form = True
+            if service_form.is_valid():
+                service_form.save()
+                redirect_url = f"{reverse('dashboard')}?section=services"
+                return redirect(redirect_url)
         else:
             section = "overview"
 
@@ -31,6 +41,8 @@ def dashboard(request):
         "categories": categories,
         "category_form": category_form,
         "show_category_form": show_category_form,
+        "service_form": service_form,
+        "show_service_form": show_service_form,
     }
     return render(request, "accounts/dashboard.html", context)
 

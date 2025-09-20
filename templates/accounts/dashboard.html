@@ -14,7 +14,7 @@
             <button type="button" class="kitlast-dashboard-sidebar__toggle" data-section-target="services" aria-expanded="{% if section == 'services' %}true{% else %}false{% endif %}" aria-controls="services-subnav">Gestion des prestations</button>
             <ul id="services-subnav" class="kitlast-dashboard-sidebar__subnav" {% if section != 'services' %}hidden{% endif %}>
               <li><a href="{% url 'dashboard' %}?section=services&show=category-form" data-action="show-category-form">Ajouter une catégorie</a></li>
-              <li><a href="{% url 'dashboard' %}?section=services" data-action="show-service-form">Ajouter une prestation</a></li>
+              <li><a href="{% url 'dashboard' %}?section=services&show=service-form" data-action="show-service-form">Ajouter une prestation</a></li>
             </ul>
           </li>
           <li><a href="{% url 'dashboard' %}?section=planning" data-section-target="planning">Gestion des plannings</a></li>
@@ -139,6 +139,69 @@
     </div>
   </div>
 
+  <div class="kitlast-modal" data-service-modal {% if not show_service_form and not service_form.errors %}hidden{% endif %}>
+    <div class="kitlast-modal__overlay" data-modal-close></div>
+    <div class="kitlast-modal__content" role="dialog" aria-modal="true" aria-labelledby="service-modal-title">
+      <header class="kitlast-modal__header">
+        <h2 id="service-modal-title">Ajouter une prestation</h2>
+        <button type="button" class="kitlast-modal__close" data-modal-close aria-label="Fermer la modale">×</button>
+      </header>
+      <div class="kitlast-modal__body">
+        <form method="post" action="{% url 'dashboard' %}?section=services" class="kitlast-modal__form">
+          {% csrf_token %}
+          <input type="hidden" name="action" value="add_service">
+          {% if service_form.non_field_errors %}
+            <div class="kitlast-field__errors">
+              {% for error in service_form.non_field_errors %}{{ error }}{% endfor %}
+            </div>
+          {% endif %}
+          <div class="kitlast-field">
+            {{ service_form.name.label_tag }}
+            {{ service_form.name }}
+            {% if service_form.name.errors %}
+              <div class="kitlast-field__errors">
+                {% for error in service_form.name.errors %}{{ error }}{% endfor %}
+              </div>
+            {% endif %}
+          </div>
+          <div class="kitlast-field">
+            {{ service_form.category.label_tag }}
+            {{ service_form.category }}
+            {% if service_form.category.errors %}
+              <div class="kitlast-field__errors">
+                {% for error in service_form.category.errors %}{{ error }}{% endfor %}
+              </div>
+            {% endif %}
+          </div>
+          <div class="kitlast-modal__row">
+            <div class="kitlast-field">
+              {{ service_form.price.label_tag }}
+              {{ service_form.price }}
+              {% if service_form.price.errors %}
+                <div class="kitlast-field__errors">
+                  {% for error in service_form.price.errors %}{{ error }}{% endfor %}
+                </div>
+              {% endif %}
+            </div>
+            <div class="kitlast-field">
+              {{ service_form.duration_minutes.label_tag }}
+              {{ service_form.duration_minutes }}
+              {% if service_form.duration_minutes.errors %}
+                <div class="kitlast-field__errors">
+                  {% for error in service_form.duration_minutes.errors %}{{ error }}{% endfor %}
+                </div>
+              {% endif %}
+            </div>
+          </div>
+          <div class="kitlast-modal__actions">
+            <button type="button" class="kitlast-button kitlast-button--ghost" data-modal-close>Annuler</button>
+            <button type="submit" class="kitlast-button">Valider</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
   <script>
     (function () {
       const toggle = document.querySelector('.kitlast-dashboard-sidebar__toggle');
@@ -147,25 +210,26 @@
       const sections = document.querySelectorAll('.kitlast-content-section');
       const navLinks = document.querySelectorAll('[data-section-target]');
       const addCategoryLinks = document.querySelectorAll('[data-action="show-category-form"]');
+      const addServiceLinks = document.querySelectorAll('[data-action="show-service-form"]');
       const categoryModal = document.querySelector('[data-category-modal]');
-      const modalCloseButtons = categoryModal ? categoryModal.querySelectorAll('[data-modal-close]') : [];
+      const serviceModal = document.querySelector('[data-service-modal]');
       const categoryFormField = categoryModal ? categoryModal.querySelector('input[type="text"]') : null;
+      const serviceNameField = serviceModal ? serviceModal.querySelector('input[name="name"]') : null;
 
-      function setActiveSection(sectionName) {
-        if (!sectionContainer) return;
-        sectionContainer.setAttribute('data-active-section', sectionName);
-        sections.forEach((section) => {
-          section.classList.toggle('is-active', section.dataset.section === sectionName);
-        });
-        if (sectionName === 'services' && toggle && subnav) {
-          toggle.setAttribute('aria-expanded', 'true');
-          subnav.hidden = false;
-        }
+      let currentSection = sectionContainer ? sectionContainer.dataset.activeSection || 'overview' : 'overview';
+
+      function syncUrl() {
         try {
           const url = new URL(window.location);
-          url.searchParams.set('section', sectionName);
-          if (sectionName === 'services' && categoryModal && !categoryModal.hasAttribute('hidden')) {
-            url.searchParams.set('show', 'category-form');
+          url.searchParams.set('section', currentSection);
+          if (currentSection === 'services') {
+            if (categoryModal && !categoryModal.hasAttribute('hidden')) {
+              url.searchParams.set('show', 'category-form');
+            } else if (serviceModal && !serviceModal.hasAttribute('hidden')) {
+              url.searchParams.set('show', 'service-form');
+            } else {
+              url.searchParams.delete('show');
+            }
           } else {
             url.searchParams.delete('show');
           }
@@ -174,6 +238,60 @@
           /* noop */
         }
       }
+
+      function setActiveSection(sectionName) {
+        if (!sectionContainer) return;
+        currentSection = sectionName;
+        sectionContainer.setAttribute('data-active-section', sectionName);
+        sections.forEach((section) => {
+          section.classList.toggle('is-active', section.dataset.section === sectionName);
+        });
+        if (sectionName === 'services' && toggle && subnav) {
+          toggle.setAttribute('aria-expanded', 'true');
+          subnav.hidden = false;
+        } else if (sectionName !== 'services') {
+          closeModal(categoryModal);
+          closeModal(serviceModal);
+        }
+        syncUrl();
+      }
+
+      function openModal(modal, focusElement) {
+        if (!modal) return;
+        modal.removeAttribute('hidden');
+        if (focusElement) {
+          window.requestAnimationFrame(() => focusElement.focus());
+        }
+        syncUrl();
+      }
+
+      function closeModal(modal) {
+        if (!modal) return;
+        modal.setAttribute('hidden', '');
+        syncUrl();
+      }
+
+      function attachModalHandlers(modal, focusElement) {
+        if (!modal) return null;
+        modal.querySelectorAll('[data-modal-close]').forEach((btn) => {
+          btn.addEventListener('click', (event) => {
+            event.preventDefault();
+            closeModal(modal);
+          });
+        });
+        modal.addEventListener('click', (event) => {
+          if (event.target.dataset && event.target.dataset.modalClose !== undefined) {
+            closeModal(modal);
+          }
+        });
+        return {
+          open: () => openModal(modal, focusElement),
+          close: () => closeModal(modal),
+        };
+      }
+
+      const categoryModalHandlers = attachModalHandlers(categoryModal, categoryFormField);
+      const serviceModalHandlers = attachModalHandlers(serviceModal, serviceNameField);
 
       if (toggle && subnav) {
         toggle.addEventListener('click', () => {
@@ -195,53 +313,44 @@
 
       addCategoryLinks.forEach((link) => {
         link.addEventListener('click', (event) => {
-          if (categoryModal) {
-            categoryModal.removeAttribute('hidden');
-          }
+          event.preventDefault();
           setActiveSection('services');
-          if (categoryFormField) {
-            window.requestAnimationFrame(() => categoryFormField.focus());
+          if (categoryModalHandlers) {
+            categoryModalHandlers.open();
           }
-          event.preventDefault();
         });
       });
 
-      modalCloseButtons.forEach((btn) => {
-        btn.addEventListener('click', (event) => {
-          if (categoryModal) {
-            categoryModal.setAttribute('hidden', '');
-          }
-          try {
-            const url = new URL(window.location);
-            url.searchParams.delete('show');
-            window.history.replaceState(null, '', url);
-          } catch (err) {
-            /* noop */
-          }
+      addServiceLinks.forEach((link) => {
+        link.addEventListener('click', (event) => {
           event.preventDefault();
+          setActiveSection('services');
+          if (serviceModalHandlers) {
+            serviceModalHandlers.open();
+          }
         });
       });
 
-      if (categoryModal) {
-        categoryModal.addEventListener('click', (event) => {
-          if (event.target.dataset && event.target.dataset.modalClose !== undefined) {
-            categoryModal.setAttribute('hidden', '');
-            try {
-              const url = new URL(window.location);
-              url.searchParams.delete('show');
-              window.history.replaceState(null, '', url);
-            } catch (err) {
-              /* noop */
-            }
-          }
-        });
-      }
+      document.addEventListener('keydown', (event) => {
+        if (event.key !== 'Escape') {
+          return;
+        }
+        if (categoryModal && !categoryModal.hasAttribute('hidden')) {
+          closeModal(categoryModal);
+        }
+        if (serviceModal && !serviceModal.hasAttribute('hidden')) {
+          closeModal(serviceModal);
+        }
+      });
 
       if (sectionContainer) {
         const active = sectionContainer.dataset.activeSection;
         setActiveSection(active || 'overview');
-        if (active === 'services' && categoryModal && categoryModal.hasAttribute('hidden') && {{ show_category_form|yesno:'true,false' }} ) {
-          categoryModal.removeAttribute('hidden');
+        if ((active === 'services') && categoryModalHandlers && {{ show_category_form|yesno:'true,false' }} ) {
+          categoryModalHandlers.open();
+        }
+        if ((active === 'services') && serviceModalHandlers && {{ show_service_form|yesno:'true,false' }} ) {
+          serviceModalHandlers.open();
         }
       }
     })();
