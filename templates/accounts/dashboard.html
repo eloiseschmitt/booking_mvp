@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+{% block content %}
+  <section class="kitlast-dashboard">
+    <div class="kitlast-card">
+      <h1 class="kitlast-dashboard__heading">Bonjour {{ request.user.first_name|default:request.user.email }} !</h1>
+      <p class="kitlast-dashboard__subtitle">Heureux de vous revoir sur Kitlast. Gérez vos réservations et votre vitrine en toute simplicité.</p>
+
+      <form method="post" action="{% url 'logout' %}" class="kitlast-form-inline">
+        {% csrf_token %}
+        <button type="submit" class="kitlast-button">Se déconnecter</button>
+      </form>
+    </div>
+  </section>
+{% endblock %}
