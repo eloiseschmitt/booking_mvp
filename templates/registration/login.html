@@ -2,54 +2,58 @@
 {% block title %}Se connecter{% endblock %}
 {% block content %}
 
-<div class="kitlast-login">
-  <div class="kitlast-login__card">
-    <div class="kitlast-login__brand">
-      <img src="https://kitlast.com/wp-content/uploads/2025/08/kitlast-200-x-100-px.svg" alt="Kitlast" />
-      <div>
-        <h1>Bienvenue chez Kitlast</h1>
-        <p>Accédez à votre espace pour suivre vos réservations, mettre à jour vos services et rester proche de vos
-          clients.</p>
+<div class="kitlast-login-page">
+  <header class="kitlast-login__header">
+    <img src="https://kitlast.com/wp-content/uploads/2025/08/kitlast-200-x-100-px.svg" alt="Kitlast" />
+  </header>
+  <div class="kitlast-login">
+    <div class="kitlast-login__card">
+      <div class="kitlast-login__brand">
+        <div>
+          <h1>Bienvenue chez Kitlast</h1>
+          <p>Accédez à votre espace pour suivre vos réservations, mettre à jour vos services et rester proche de vos
+            clients.</p>
+        </div>
       </div>
-    </div>
-    <div class="kitlast-login__form">
-      <div class="kitlast-login__intro">
-        <h2>Connexion</h2>
-        <p>Renseignez votre email et votre mot de passe pour continuer.</p>
-      </div>
-
-      {% if form.non_field_errors %}
-      <div class="kitlast-login__alert">{{ form.non_field_errors }}</div>
-      {% elif form.errors %}
-      <div class="kitlast-login__alert">Identifiants invalides. Vérifiez votre adresse e-mail et votre mot de passe.
-      </div>
-      {% endif %}
-
-      <form method="post" action="{% url 'login' %}" class="kitlast-form">
-        {% csrf_token %}
-        <input type="hidden" name="next" value="{{ next }}">
-
-        <div class="kitlast-field">
-          <label for="{{ form.username.id_for_label }}">Adresse e-mail</label>
-          {{ form.username }}
-          {% if form.username.errors %}
-          <div class="kitlast-field__errors">{{ form.username.errors }}</div>
-          {% endif %}
+      <div class="kitlast-login__form">
+        <div class="kitlast-login__intro">
+          <h2>Connexion</h2>
+          <p>Renseignez votre email et votre mot de passe pour continuer.</p>
         </div>
 
-        <div class="kitlast-field">
-          <label for="{{ form.password.id_for_label }}">Mot de passe</label>
-          {{ form.password }}
-          {% if form.password.errors %}
-          <div class="kitlast-field__errors">{{ form.password.errors }}</div>
-          {% endif %}
+        {% if form.non_field_errors %}
+        <div class="kitlast-login__alert">{{ form.non_field_errors }}</div>
+        {% elif form.errors %}
+        <div class="kitlast-login__alert">Identifiants invalides. Vérifiez votre adresse e-mail et votre mot de passe.
         </div>
+        {% endif %}
 
-        <div class="kitlast-submit">
-          <button type="submit">Se connecter</button>
-          <p class="kitlast-login__links"><a href="{% url 'password_reset' %}">Mot de passe oublié&nbsp;?</a></p>
-        </div>
-      </form>
+        <form method="post" action="{% url 'login' %}" class="kitlast-form">
+          {% csrf_token %}
+          <input type="hidden" name="next" value="{{ next }}">
+
+          <div class="kitlast-field">
+            <label for="{{ form.username.id_for_label }}">Adresse e-mail</label>
+            {{ form.username }}
+            {% if form.username.errors %}
+            <div class="kitlast-field__errors">{{ form.username.errors }}</div>
+            {% endif %}
+          </div>
+
+          <div class="kitlast-field">
+            <label for="{{ form.password.id_for_label }}">Mot de passe</label>
+            {{ form.password }}
+            {% if form.password.errors %}
+            <div class="kitlast-field__errors">{{ form.password.errors }}</div>
+            {% endif %}
+          </div>
+
+          <div class="kitlast-submit">
+            <button type="submit">Se connecter</button>
+            <p class="kitlast-login__links"><a href="{% url 'password_reset' %}">Mot de passe oublié&nbsp;?</a></p>
+          </div>
+        </form>
+      </div>
     </div>
   </div>
 </div>

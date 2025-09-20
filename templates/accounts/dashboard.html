@@ -8,40 +8,197 @@
       </div>
       <nav class="kitlast-dashboard-sidebar__nav" aria-label="Menu du tableau de bord">
         <ul>
-          <li><a href="#services">Gestion des prestations</a></li>
-          <li><a href="#planning">Gestion des plannings</a></li>
-          <li><a href="#clients">Gestion des clients</a></li>
+          <li>
+            <button type="button" class="kitlast-dashboard-sidebar__toggle" data-section-target="services" aria-expanded="{% if section == 'services' %}true{% else %}false{% endif %}" aria-controls="services-subnav">Gestion des prestations</button>
+            <ul id="services-subnav" class="kitlast-dashboard-sidebar__subnav" {% if section != 'services' %}hidden{% endif %}>
+              <li><a href="{% url 'dashboard' %}?section=services&show=category-form" data-action="show-category-form">Ajouter une catégorie</a></li>
+              <li><a href="{% url 'dashboard' %}?section=services" data-action="show-service-form">Ajouter une prestation</a></li>
+            </ul>
+          </li>
+          <li><a href="{% url 'dashboard' %}?section=planning" data-section-target="planning">Gestion des plannings</a></li>
+          <li><a href="{% url 'dashboard' %}?section=clients" data-section-target="clients">Gestion des clients</a></li>
         </ul>
       </nav>
     </aside>
 
     <section class="kitlast-dashboard-area">
       <div class="kitlast-dashboard">
-        <div class="kitlast-card">
-          <h1 class="kitlast-dashboard__heading">Bonjour {{ request.user.first_name|default:request.user.email }} !</h1>
-          <p class="kitlast-dashboard__subtitle">Heureux de vous revoir sur Kitlast. Gérez vos réservations et votre vitrine en toute simplicité.</p>
-
+        <div class="kitlast-dashboard__topbar">
           <form method="post" action="{% url 'logout' %}" class="kitlast-form-inline">
             {% csrf_token %}
             <button type="submit" class="kitlast-button">Se déconnecter</button>
           </form>
         </div>
 
-        <div class="kitlast-dashboard-panels">
-          <article id="services" class="kitlast-panel-card">
-            <h2>Gestion des prestations</h2>
-            <p class="kitlast-panel-card__text">Ajoutez, mettez à jour et mettez en avant vos prestations pour vos clients Kitlast.</p>
-          </article>
-          <article id="planning" class="kitlast-panel-card">
-            <h2>Gestion des plannings</h2>
-            <p class="kitlast-panel-card__text">Organisez vos créneaux et synchronisez votre agenda avec les demandes reçues.</p>
-          </article>
-          <article id="clients" class="kitlast-panel-card">
-            <h2>Gestion des clients</h2>
-            <p class="kitlast-panel-card__text">Suivez vos clients fidèles, leurs rendez-vous et vos échanges importants.</p>
-          </article>
+        <div class="kitlast-card">
+          <h1 class="kitlast-dashboard__heading">Bonjour {{ request.user.first_name|default:request.user.email }} !</h1>
+          <p class="kitlast-dashboard__subtitle">Heureux de vous revoir sur Kitlast. Gérez vos réservations et votre vitrine en toute simplicité.</p>
+        </div>
+
+        <div class="kitlast-dashboard-content" data-active-section="{{ section }}">
+          <section class="kitlast-content-section{% if section == 'overview' %} is-active{% endif %}" data-section="overview">
+            <div class="kitlast-dashboard-panels">
+              <article class="kitlast-panel-card">
+                <h2>Gestion des prestations</h2>
+                <p class="kitlast-panel-card__text">Ajoutez, mettez à jour et mettez en avant vos prestations pour vos clients Kitlast.</p>
+              </article>
+              <article class="kitlast-panel-card">
+                <h2>Gestion des plannings</h2>
+                <p class="kitlast-panel-card__text">Organisez vos créneaux et synchronisez votre agenda avec les demandes reçues.</p>
+              </article>
+              <article class="kitlast-panel-card">
+                <h2>Gestion des clients</h2>
+                <p class="kitlast-panel-card__text">Suivez vos clients fidèles, leurs rendez-vous et vos échanges importants.</p>
+              </article>
+            </div>
+          </section>
+
+          <section class="kitlast-content-section{% if section == 'services' %} is-active{% endif %}" data-section="services">
+            <header class="kitlast-section-header">
+              <div>
+                <h2>Vos catégories & prestations</h2>
+                <p class="kitlast-section-header__text">Organisez vos offres par catégorie et gardez une vue claire sur vos prestations.</p>
+              </div>
+              <button type="button" class="kitlast-button kitlast-button--ghost" data-action="show-category-form">Ajouter une catégorie</button>
+            </header>
+
+            <div class="kitlast-category-form" data-category-form {% if not show_category_form and not category_form.errors %}hidden{% endif %}>
+              <form method="post" action="{% url 'dashboard' %}?section=services">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="add_category">
+                <div class="kitlast-field">
+                  {{ category_form.name.label_tag }}
+                  {{ category_form.name }}
+                  {% if category_form.name.errors %}
+                    <div class="kitlast-field__errors">
+                      {% for error in category_form.name.errors %}{{ error }}{% endfor %}
+                    </div>
+                  {% endif %}
+                </div>
+                <button type="submit" class="kitlast-button">Valider</button>
+              </form>
+            </div>
+
+            <div class="kitlast-category-list">
+              {% if categories %}
+                <ul>
+                  {% for category in categories %}
+                    <li>
+                      <div class="kitlast-category-list__header">
+                        <h3>{{ category.name }}</h3>
+                      </div>
+                      {% if category.services.all %}
+                        <ul class="kitlast-service-list">
+                          {% for service in category.services.all %}
+                            <li>
+                              <span class="kitlast-service-list__name">{{ service.name }}</span>
+                              {% if service.price %}<span class="kitlast-service-list__meta">{{ service.price }} €</span>{% endif %}
+                              {% if service.duration_minutes %}<span class="kitlast-service-list__meta">{{ service.duration_minutes }} min</span>{% endif %}
+                            </li>
+                          {% endfor %}
+                        </ul>
+                      {% else %}
+                        <p class="kitlast-empty">Aucune prestation pour cette catégorie.</p>
+                      {% endif %}
+                    </li>
+                  {% endfor %}
+                </ul>
+              {% else %}
+                <p class="kitlast-empty">Aucune catégorie pour le moment. Ajoutez votre première catégorie pour structurer vos prestations.</p>
+              {% endif %}
+            </div>
+          </section>
+
+          <section class="kitlast-content-section{% if section == 'planning' %} is-active{% endif %}" data-section="planning">
+            <article class="kitlast-panel-card">
+              <h2>Gestion des plannings</h2>
+              <p class="kitlast-panel-card__text">Créez des plannings précis, bloquez vos indisponibilités et synchronisez votre agenda pour éviter les doublons.</p>
+            </article>
+          </section>
+
+          <section class="kitlast-content-section{% if section == 'clients' %} is-active{% endif %}" data-section="clients">
+            <article class="kitlast-panel-card">
+              <h2>Gestion des clients</h2>
+              <p class="kitlast-panel-card__text">Retrouvez l'historique de vos clients, leurs préférences et facilitez vos échanges pour fidéliser votre communauté.</p>
+            </article>
+          </section>
         </div>
       </div>
     </section>
   </div>
+  <script>
+    (function () {
+      const toggle = document.querySelector('.kitlast-dashboard-sidebar__toggle');
+      const subnav = document.getElementById('services-subnav');
+      const sectionContainer = document.querySelector('.kitlast-dashboard-content');
+      const sections = document.querySelectorAll('.kitlast-content-section');
+      const navLinks = document.querySelectorAll('[data-section-target]');
+      const addCategoryLinks = document.querySelectorAll('[data-action="show-category-form"]');
+      const categoryFormWrapper = document.querySelector('[data-category-form]');
+      const categoryFormField = categoryFormWrapper ? categoryFormWrapper.querySelector('input[type="text"]') : null;
+
+      function setActiveSection(sectionName) {
+        if (!sectionContainer) return;
+        sectionContainer.setAttribute('data-active-section', sectionName);
+        sections.forEach((section) => {
+          section.classList.toggle('is-active', section.dataset.section === sectionName);
+        });
+        if (sectionName === 'services' && toggle && subnav) {
+          toggle.setAttribute('aria-expanded', 'true');
+          subnav.hidden = false;
+        }
+        try {
+          const url = new URL(window.location);
+          url.searchParams.set('section', sectionName);
+          if (sectionName === 'services' && categoryFormWrapper && !categoryFormWrapper.hidden) {
+            url.searchParams.set('show', 'category-form');
+          } else {
+            url.searchParams.delete('show');
+          }
+          window.history.replaceState(null, '', url);
+        } catch (err) {
+          /* noop */
+        }
+      }
+
+      if (toggle && subnav) {
+        toggle.addEventListener('click', () => {
+          const isExpanded = toggle.getAttribute('aria-expanded') === 'true';
+          toggle.setAttribute('aria-expanded', String(!isExpanded));
+          subnav.hidden = isExpanded;
+          setActiveSection('services');
+        });
+      }
+
+      navLinks.forEach((link) => {
+        link.addEventListener('click', (event) => {
+          const targetSection = link.dataset.sectionTarget;
+          if (!targetSection) return;
+          setActiveSection(targetSection);
+          event.preventDefault();
+        });
+      });
+
+      addCategoryLinks.forEach((link) => {
+        link.addEventListener('click', (event) => {
+          if (categoryFormWrapper) {
+            categoryFormWrapper.hidden = false;
+          }
+          setActiveSection('services');
+          if (categoryFormField) {
+            window.requestAnimationFrame(() => categoryFormField.focus());
+          }
+          event.preventDefault();
+        });
+      });
+
+      if (sectionContainer) {
+        const active = sectionContainer.dataset.activeSection;
+        setActiveSection(active || 'overview');
+        if (active === 'services' && categoryFormWrapper && categoryFormWrapper.hidden && {{ show_category_form|yesno:'true,false' }} ) {
+          categoryFormWrapper.hidden = false;
+        }
+      }
+    })();
+  </script>
 {% endblock %}
