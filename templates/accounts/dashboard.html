@@ -1,15 +1,47 @@
 {% extends "base.html" %}
 {% block title %}Dashboard{% endblock %}
 {% block content %}
-  <section class="kitlast-dashboard">
-    <div class="kitlast-card">
-      <h1 class="kitlast-dashboard__heading">Bonjour {{ request.user.first_name|default:request.user.email }} !</h1>
-      <p class="kitlast-dashboard__subtitle">Heureux de vous revoir sur Kitlast. Gérez vos réservations et votre vitrine en toute simplicité.</p>
+  <div class="kitlast-dashboard-layout">
+    <aside class="kitlast-dashboard-sidebar">
+      <div class="kitlast-dashboard-sidebar__logo">
+        <img src="https://kitlast.com/wp-content/uploads/2025/08/kitlast-200-x-100-px.svg" alt="Kitlast" />
+      </div>
+      <nav class="kitlast-dashboard-sidebar__nav" aria-label="Menu du tableau de bord">
+        <ul>
+          <li><a href="#services">Gestion des prestations</a></li>
+          <li><a href="#planning">Gestion des plannings</a></li>
+          <li><a href="#clients">Gestion des clients</a></li>
+        </ul>
+      </nav>
+    </aside>
 
-      <form method="post" action="{% url 'logout' %}" class="kitlast-form-inline">
-        {% csrf_token %}
-        <button type="submit" class="kitlast-button">Se déconnecter</button>
-      </form>
-    </div>
-  </section>
+    <section class="kitlast-dashboard-area">
+      <div class="kitlast-dashboard">
+        <div class="kitlast-card">
+          <h1 class="kitlast-dashboard__heading">Bonjour {{ request.user.first_name|default:request.user.email }} !</h1>
+          <p class="kitlast-dashboard__subtitle">Heureux de vous revoir sur Kitlast. Gérez vos réservations et votre vitrine en toute simplicité.</p>
+
+          <form method="post" action="{% url 'logout' %}" class="kitlast-form-inline">
+            {% csrf_token %}
+            <button type="submit" class="kitlast-button">Se déconnecter</button>
+          </form>
+        </div>
+
+        <div class="kitlast-dashboard-panels">
+          <article id="services" class="kitlast-panel-card">
+            <h2>Gestion des prestations</h2>
+            <p class="kitlast-panel-card__text">Ajoutez, mettez à jour et mettez en avant vos prestations pour vos clients Kitlast.</p>
+          </article>
+          <article id="planning" class="kitlast-panel-card">
+            <h2>Gestion des plannings</h2>
+            <p class="kitlast-panel-card__text">Organisez vos créneaux et synchronisez votre agenda avec les demandes reçues.</p>
+          </article>
+          <article id="clients" class="kitlast-panel-card">
+            <h2>Gestion des clients</h2>
+            <p class="kitlast-panel-card__text">Suivez vos clients fidèles, leurs rendez-vous et vos échanges importants.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+  </div>
 {% endblock %}

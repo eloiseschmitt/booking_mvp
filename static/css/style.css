@@ -246,6 +246,61 @@ a:focus {
     gap: 32px;
 }
 
+.kitlast-dashboard-layout {
+    min-height: 100vh;
+    display: flex;
+    background: linear-gradient(180deg, rgba(0, 106, 78, 0.08) 0%, rgba(245, 240, 230, 0.6) 60%, #ffffff 100%);
+}
+
+.kitlast-dashboard-sidebar {
+    flex: 0 0 20%;
+    background: var(--surface);
+    box-shadow: 6px 0 24px rgba(17, 53, 44, 0.08);
+    padding: 32px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 48px;
+}
+
+.kitlast-dashboard-sidebar__logo img {
+    width: 160px;
+    max-width: 100%;
+}
+
+.kitlast-dashboard-sidebar__nav ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+
+.kitlast-dashboard-sidebar__nav a {
+    font-family: 'Poppins', sans-serif;
+    font-weight: 600;
+    color: var(--muted);
+    padding: 12px 16px;
+    border-radius: 12px;
+    transition: background 0.18s ease, color 0.18s ease, transform 0.18s ease;
+    display: block;
+}
+
+.kitlast-dashboard-sidebar__nav a:hover,
+.kitlast-dashboard-sidebar__nav a:focus {
+    background: rgba(0, 106, 78, 0.12);
+    color: var(--brand-600);
+    transform: translateX(4px);
+    outline: none;
+}
+
+.kitlast-dashboard-area {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    padding: 48px 48px 72px;
+}
+
 .kitlast-dashboard__heading {
     font-family: 'Poppins', sans-serif;
     font-size: 2.125rem;
@@ -262,6 +317,31 @@ a:focus {
     flex-wrap: wrap;
     align-items: center;
     gap: 16px;
+}
+
+.kitlast-dashboard-panels {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 24px;
+}
+
+.kitlast-panel-card {
+    background: var(--surface);
+    border-radius: 18px;
+    padding: 24px;
+    box-shadow: 0 14px 32px rgba(17, 53, 44, 0.08);
+}
+
+.kitlast-panel-card h2 {
+    font-family: 'Poppins', sans-serif;
+    font-size: 1.25rem;
+    margin-bottom: 12px;
+}
+
+.kitlast-panel-card__text {
+    color: var(--muted);
+    margin: 0;
+    line-height: 1.6;
 }
 
 .kitlast-button {
@@ -303,5 +383,34 @@ a:focus {
 
     .kitlast-dashboard__heading {
         font-size: 1.8rem;
+    }
+
+    .kitlast-dashboard-layout {
+        flex-direction: column;
+    }
+
+    .kitlast-dashboard-sidebar {
+        flex: none;
+        width: 100%;
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+        gap: 24px;
+        padding: 24px;
+        box-shadow: none;
+    }
+
+    .kitlast-dashboard-sidebar__nav ul {
+        flex-direction: row;
+        flex-wrap: wrap;
+        gap: 12px;
+    }
+
+    .kitlast-dashboard-sidebar__nav a {
+        padding: 10px 14px;
+    }
+
+    .kitlast-dashboard-area {
+        padding: 32px 24px 56px;
     }
 }
