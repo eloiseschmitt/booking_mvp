@@ -818,6 +818,123 @@ a:focus {
     transform: translateY(0);
 }
 
+/* Workshop detail */
+.workshop-hero {
+    display: grid;
+    grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+    gap: 32px;
+    align-items: center;
+    margin: 72px auto 48px;
+    max-width: 1080px;
+    padding: 0 24px;
+}
+
+.workshop-hero__image img {
+    width: 100%;
+    border-radius: 24px;
+    object-fit: cover;
+}
+
+.workshop-hero__info h1 {
+    font-family: 'Poppins', sans-serif;
+    font-size: 2.4rem;
+    margin-bottom: 12px;
+}
+
+.workshop-hero__address {
+    color: var(--muted);
+    line-height: 1.6;
+    font-size: 1.05rem;
+    white-space: pre-line;
+}
+
+.workshop-services {
+    max-width: 1080px;
+    margin: 0 auto 120px;
+    padding: 0 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+}
+
+.workshop-services h2 {
+    font-family: 'Poppins', sans-serif;
+    font-size: 1.8rem;
+    margin-bottom: 8px;
+}
+
+.workshop-services__category {
+    background: var(--surface);
+    border-radius: 18px;
+    border: 1px solid rgba(0, 106, 78, 0.1);
+    box-shadow: 0 16px 36px rgba(17, 53, 44, 0.1);
+    padding: 28px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+
+.workshop-services__category h3 {
+    margin: 0;
+    font-family: 'Poppins', sans-serif;
+    font-size: 1.25rem;
+}
+
+.workshop-services__category ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+
+.workshop-services__category li {
+    border-bottom: 1px solid rgba(0, 106, 78, 0.08);
+    padding-bottom: 16px;
+}
+
+.workshop-services__category li:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+}
+
+.workshop-service__main {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.workshop-service__name {
+    font-weight: 600;
+    font-size: 1.05rem;
+}
+
+.workshop-service__price {
+    font-weight: 600;
+    color: var(--brand);
+}
+
+.workshop-service__meta,
+.workshop-service__description {
+    margin: 8px 0 0;
+    color: var(--muted);
+    line-height: 1.5;
+}
+
+@media (max-width: 920px) {
+    .workshop-hero {
+        grid-template-columns: 1fr;
+        margin: 48px auto 32px;
+    }
+
+    .workshop-services__category {
+        padding: 24px;
+    }
+}
+
 @media (max-width: 640px) {
     .kitlast-card {
         padding: 36px 28px;

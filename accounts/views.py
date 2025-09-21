@@ -1,10 +1,10 @@
 from django.contrib.auth import logout
 from django.contrib.auth.decorators import login_required
-from django.shortcuts import redirect, render
+from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 
 from .forms import CategoryForm, ServiceForm
-from .models import Category, Service
+from .models import Category, Service, Workshop
 from .services import delete_service, prepare_service_form, save_service_form
 
 @login_required
@@ -36,16 +36,16 @@ def dashboard(request):
             section = "services"
             service_form = ServiceForm(request.POST)
             show_service_form = True
-            if service_form.is_valid():
-                service_form.save()
+            success, service_form = save_service_form(service_form, user=request.user)
+            if success:
                 redirect_url = f"{reverse('dashboard')}?section=services"
                 return redirect(redirect_url)
         elif action == "update_service":
             section = "services"
             service_id = request.POST.get("service_id")
             form, _ = prepare_service_form(service_id, data=request.POST)
-            if form.is_valid():
-                save_service_form(form)
+            success, form = save_service_form(form)
+            if success:
                 redirect_url = f"{reverse('dashboard')}?section=services"
                 return redirect(redirect_url)
             else:
@@ -78,3 +78,19 @@ def logout_view(request):
         logout(request)
         return redirect("login")
     return redirect("dashboard")
+
+
+def workshop_detail(request, pk):
+    workshop = get_object_or_404(
+        Workshop.objects.prefetch_related("services__category"), pk=pk
+    )
+    services_by_category = {}
+    for service in workshop.services.all():
+        services_by_category.setdefault(service.category, []).append(service)
+
+    context = {
+        "workshop": workshop,
+        "services_by_category": services_by_category,
+        "workshop_photo": workshop.photo or "img/elio-santos-5ZQn_gWKvLE-unsplash.jpg",
+    }
+    return render(request, "accounts/workshop_detail.html", context)

@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}{{ workshop.name }} | Kitlast{% endblock %}
+{% block content %}
+<section class="workshop-hero">
+  <div class="workshop-hero__image">
+    <img src="{% static workshop_photo %}" alt="Atelier {{ workshop.name }}" />
+  </div>
+  <div class="workshop-hero__info">
+    <h1>{{ workshop.name }}</h1>
+    <p class="workshop-hero__address">{{ workshop.address|linebreaksbr }}</p>
+  </div>
+</section>
+
+<section class="workshop-services">
+  <h2>Prestations disponibles</h2>
+  {% if services_by_category %}
+    {% for category, services in services_by_category.items %}
+      <article class="workshop-services__category">
+        <header>
+          <h3>{{ category.name }}</h3>
+        </header>
+        <ul>
+          {% for service in services %}
+            <li>
+              <div class="workshop-service__main">
+                <span class="workshop-service__name">{{ service.name }}</span>
+                {% if service.price %}<span class="workshop-service__price">{{ service.price }} €</span>{% endif %}
+              </div>
+              {% if service.duration_minutes %}
+                <p class="workshop-service__meta">Durée : {{ service.duration_minutes }} min</p>
+              {% endif %}
+              {% if service.description %}
+                <p class="workshop-service__description">{{ service.description }}</p>
+              {% endif %}
+            </li>
+          {% endfor %}
+        </ul>
+      </article>
+    {% endfor %}
+  {% else %}
+    <p>Aucune prestation n'est encore associée à cet atelier.</p>
+  {% endif %}
+</section>
+{% endblock %}

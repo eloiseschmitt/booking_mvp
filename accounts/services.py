@@ -15,11 +15,15 @@ def prepare_service_form(service_id=None, *, data=None):
     return form, service
 
 
-def save_service_form(form):
+def save_service_form(form, *, user=None):
     if not form.is_valid():
         return False, form
     with transaction.atomic():
-        form.save()
+        service = form.save(commit=False)
+        if user is not None and service.created_by_id is None:
+            service.created_by = user
+        service.save()
+        form.save_m2m()
     return True, form
 
 

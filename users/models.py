@@ -28,12 +28,21 @@ class UserManager(BaseUserManager):
 
 
 class User(AbstractBaseUser, PermissionsMixin):
+    class UserType(models.TextChoices):
+        PROFESSIONAL = "professional", "Professionnel"
+        INDIVIDUAL = "individual", "Particulier"
+
     email = models.EmailField("email address", unique=True)
     first_name = models.CharField(max_length=150, blank=True)
     last_name = models.CharField(max_length=150, blank=True)
     is_staff = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
     date_joined = models.DateTimeField(default=timezone.now)
+    user_type = models.CharField(
+        max_length=20,
+        choices=UserType.choices,
+        default=UserType.INDIVIDUAL,
+    )
 
     objects = UserManager()
 
@@ -42,3 +51,7 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     def __str__(self):
         return self.email
+
+    @property
+    def is_professional(self):
+        return self.user_type == self.UserType.PROFESSIONAL
