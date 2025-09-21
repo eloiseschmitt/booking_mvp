@@ -8,7 +8,10 @@
   </div>
   <div class="workshop-hero__info">
     <h1>{{ workshop.name }}</h1>
-    <p class="workshop-hero__address">{{ workshop.address|linebreaksbr }}</p>
+    <p class="workshop-hero__address">
+      {{ workshop.address|linebreaksbr }}<br />
+      {% if workshop.zip_code %}{{ workshop.zip_code }} {% endif %}{{ workshop.city }}
+    </p>
   </div>
 </section>
 

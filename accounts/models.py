@@ -24,8 +24,6 @@ class Service(models.Model):
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
         related_name="services_created",
-        null=True,
-        blank=True
     )
 
     class Meta:
@@ -38,8 +36,8 @@ class Service(models.Model):
 class Workshop(models.Model):
     name = models.CharField(max_length=150)
     address = models.TextField()
-    zip_code = models.CharField(max_length=10, blank=True)
-    city = models.CharField(max_length=150, blank=True)
+    zip_code = models.CharField(max_length=10)
+    city = models.CharField(max_length=150)
     photo = models.CharField(max_length=255, blank=True)
     services = models.ManyToManyField(Service, related_name="workshops", blank=True)
     professionals = models.ManyToManyField(
