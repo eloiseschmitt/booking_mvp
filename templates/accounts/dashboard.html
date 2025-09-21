@@ -1,358 +1,385 @@
 {% extends "base.html" %}
 {% block title %}Dashboard{% endblock %}
 {% block content %}
-  <div class="kitlast-dashboard-layout">
-    <aside class="kitlast-dashboard-sidebar">
-      <div class="kitlast-dashboard-sidebar__logo">
-        <a href="{% url 'dashboard' %}?section=overview" data-section-target="overview">
-          <img src="https://kitlast.com/wp-content/uploads/2025/08/kitlast-200-x-100-px.svg" alt="Kitlast" />
-        </a>
+<div class="kitlast-dashboard-layout">
+  <aside class="kitlast-dashboard-sidebar">
+    <div class="kitlast-dashboard-sidebar__logo">
+      <a href="{% url 'dashboard' %}?section=overview" data-section-target="overview">
+        <img src="https://kitlast.com/wp-content/uploads/2025/08/kitlast-200-x-100-px.svg" alt="Kitlast" />
+      </a>
+    </div>
+    <nav class="kitlast-dashboard-sidebar__nav" aria-label="Menu du tableau de bord">
+      <ul>
+        <li>
+          <button type="button" class="kitlast-dashboard-sidebar__toggle" data-section-target="services"
+            aria-expanded="{% if section == 'services' %}true{% else %}false{% endif %}"
+            aria-controls="services-subnav">Gestion des prestations</button>
+          <ul id="services-subnav" class="kitlast-dashboard-sidebar__subnav" {% if section != 'services' %}hidden{% endif%}>
+            <li><a href="{% url 'dashboard' %}?section=services&show=category-form" data-action="show-category-form"
+                data-modal-instant="true">Ajouter une catégorie</a></li>
+            <li><a href="{% url 'dashboard' %}?section=services&show=service-form" data-action="show-service-form"
+                data-modal-instant="true">Ajouter une prestation</a></li>
+          </ul>
+        </li>
+        <li><a href="{% url 'dashboard' %}?section=planning" data-section-target="planning">Gestion des plannings</a>
+        </li>
+        <li><a href="{% url 'dashboard' %}?section=clients" data-section-target="clients">Gestion des clients</a></li>
+      </ul>
+    </nav>
+  </aside>
+
+  <section class="kitlast-dashboard-area">
+    <div class="kitlast-dashboard">
+      <div class="kitlast-dashboard__topbar">
+        <form method="post" action="{% url 'logout' %}" class="kitlast-form-inline">
+          {% csrf_token %}
+          <button type="submit" class="kitlast-button">Se déconnecter</button>
+        </form>
       </div>
-      <nav class="kitlast-dashboard-sidebar__nav" aria-label="Menu du tableau de bord">
-        <ul>
-          <li>
-            <button type="button" class="kitlast-dashboard-sidebar__toggle" data-section-target="services" aria-expanded="{% if section == 'services' %}true{% else %}false{% endif %}" aria-controls="services-subnav">Gestion des prestations</button>
-            <ul id="services-subnav" class="kitlast-dashboard-sidebar__subnav" {% if section != 'services' %}hidden{% endif %}>
-              <li><a href="{% url 'dashboard' %}?section=services&show=category-form" data-action="show-category-form">Ajouter une catégorie</a></li>
-              <li><a href="{% url 'dashboard' %}?section=services&show=service-form" data-action="show-service-form">Ajouter une prestation</a></li>
-            </ul>
-          </li>
-          <li><a href="{% url 'dashboard' %}?section=planning" data-section-target="planning">Gestion des plannings</a></li>
-          <li><a href="{% url 'dashboard' %}?section=clients" data-section-target="clients">Gestion des clients</a></li>
-        </ul>
-      </nav>
-    </aside>
 
-    <section class="kitlast-dashboard-area">
-      <div class="kitlast-dashboard">
-        <div class="kitlast-dashboard__topbar">
-          <form method="post" action="{% url 'logout' %}" class="kitlast-form-inline">
-            {% csrf_token %}
-            <button type="submit" class="kitlast-button">Se déconnecter</button>
-          </form>
-        </div>
+      <div class="kitlast-dashboard-content" data-active-section="{{ section }}">
+        <section class="kitlast-content-section{% if section == 'overview' %} is-active{% endif %}"
+          data-section="overview">
+          <div class="kitlast-card kitlast-welcome-card">
+            <h1 class="kitlast-dashboard__heading">Bonjour {{ request.user.first_name|default:request.user.email }} !
+            </h1>
+            <p class="kitlast-dashboard__subtitle">Heureux de vous revoir sur Kitlast. Gérez vos réservations et votre
+              vitrine en toute simplicité.</p>
+          </div>
 
-        <div class="kitlast-dashboard-content" data-active-section="{{ section }}">
-          <section class="kitlast-content-section{% if section == 'overview' %} is-active{% endif %}" data-section="overview">
-            <div class="kitlast-card kitlast-welcome-card">
-              <h1 class="kitlast-dashboard__heading">Bonjour {{ request.user.first_name|default:request.user.email }} !</h1>
-              <p class="kitlast-dashboard__subtitle">Heureux de vous revoir sur Kitlast. Gérez vos réservations et votre vitrine en toute simplicité.</p>
-            </div>
-
-            <div class="kitlast-dashboard-panels">
-              <article class="kitlast-panel-card">
-                <h2>Gestion des prestations</h2>
-                <p class="kitlast-panel-card__text">Ajoutez, mettez à jour et mettez en avant vos prestations pour vos clients Kitlast.</p>
-              </article>
-              <article class="kitlast-panel-card">
-                <h2>Gestion des plannings</h2>
-                <p class="kitlast-panel-card__text">Organisez vos créneaux et synchronisez votre agenda avec les demandes reçues.</p>
-              </article>
-              <article class="kitlast-panel-card">
-                <h2>Gestion des clients</h2>
-                <p class="kitlast-panel-card__text">Suivez vos clients fidèles, leurs rendez-vous et vos échanges importants.</p>
-              </article>
-            </div>
-          </section>
-
-          <section class="kitlast-content-section{% if section == 'services' %} is-active{% endif %}" data-section="services">
-            <header class="kitlast-section-header">
-              <div>
-                <h2>Vos catégories & prestations</h2>
-                <p class="kitlast-section-header__text">Organisez vos offres par catégorie et gardez une vue claire sur vos prestations.</p>
-              </div>
-            </header>
-
-            <div class="kitlast-category-list">
-              {% if categories %}
-                <ul>
-                  {% for category in categories %}
-                    <li>
-                      <div class="kitlast-category-list__header">
-                        <h3>{{ category.name }}</h3>
-                      </div>
-                      {% if category.services.all %}
-                        <ul class="kitlast-service-list">
-                          {% for service in category.services.all %}
-                            <li>
-                              <span class="kitlast-service-list__name">{{ service.name }}</span>
-                              {% if service.price %}<span class="kitlast-service-list__meta">{{ service.price }} €</span>{% endif %}
-                              {% if service.duration_minutes %}<span class="kitlast-service-list__meta">{{ service.duration_minutes }} min</span>{% endif %}
-                            </li>
-                          {% endfor %}
-                        </ul>
-                      {% else %}
-                        <p class="kitlast-empty">Aucune prestation pour cette catégorie.</p>
-                      {% endif %}
-                    </li>
-                  {% endfor %}
-                </ul>
-              {% else %}
-                <p class="kitlast-empty">Aucune catégorie pour le moment. Ajoutez votre première catégorie pour structurer vos prestations.</p>
-              {% endif %}
-            </div>
-          </section>
-
-          <section class="kitlast-content-section{% if section == 'planning' %} is-active{% endif %}" data-section="planning">
+          <div class="kitlast-dashboard-panels">
+            <article class="kitlast-panel-card">
+              <h2>Gestion des prestations</h2>
+              <p class="kitlast-panel-card__text">Ajoutez, mettez à jour et mettez en avant vos prestations pour vos
+                clients Kitlast.</p>
+            </article>
             <article class="kitlast-panel-card">
               <h2>Gestion des plannings</h2>
-              <p class="kitlast-panel-card__text">Créez des plannings précis, bloquez vos indisponibilités et synchronisez votre agenda pour éviter les doublons.</p>
+              <p class="kitlast-panel-card__text">Organisez vos créneaux et synchronisez votre agenda avec les demandes
+                reçues.</p>
             </article>
-          </section>
-
-          <section class="kitlast-content-section{% if section == 'clients' %} is-active{% endif %}" data-section="clients">
             <article class="kitlast-panel-card">
               <h2>Gestion des clients</h2>
-              <p class="kitlast-panel-card__text">Retrouvez l'historique de vos clients, leurs préférences et facilitez vos échanges pour fidéliser votre communauté.</p>
+              <p class="kitlast-panel-card__text">Suivez vos clients fidèles, leurs rendez-vous et vos échanges
+                importants.</p>
             </article>
-          </section>
-        </div>
-      </div>
-    </section>
-  </div>
-  <div class="kitlast-modal" data-category-modal {% if not show_category_form and not category_form.errors %}hidden{% endif %}>
-    <div class="kitlast-modal__overlay" data-modal-close></div>
-    <div class="kitlast-modal__content" role="dialog" aria-modal="true" aria-labelledby="category-modal-title">
-      <header class="kitlast-modal__header">
-        <h2 id="category-modal-title">Ajouter une catégorie</h2>
-        <button type="button" class="kitlast-modal__close" data-modal-close aria-label="Fermer la modale">×</button>
-      </header>
-      <div class="kitlast-modal__body">
-        <form method="post" action="{% url 'dashboard' %}?section=services" class="kitlast-modal__form">
-          {% csrf_token %}
-          <input type="hidden" name="action" value="add_category">
-          <div class="kitlast-field">
-            {{ category_form.name.label_tag }}
-            {{ category_form.name }}
-            {% if category_form.name.errors %}
-              <div class="kitlast-field__errors">
-                {% for error in category_form.name.errors %}{{ error }}{% endfor %}
-              </div>
+          </div>
+        </section>
+
+        <section class="kitlast-content-section{% if section == 'services' %} is-active{% endif %}"
+          data-section="services">
+          <header class="kitlast-section-header">
+            <div>
+              <h2>Vos catégories & prestations</h2>
+              <p class="kitlast-section-header__text">Organisez vos offres par catégorie et gardez une vue claire sur
+                vos prestations.</p>
+            </div>
+          </header>
+
+          <div class="kitlast-category-board">
+            {% if categories %}
+            <ul>
+              {% for category in categories %}
+              <li>
+                <div class="kitlast-category-list__header">
+                  <h3>{{ category.name }}</h3>
+                </div>
+                <div class="kitlast-service-table-wrapper">
+                  <table class="kitlast-service-table">
+                    <thead>
+                      <tr>
+                        <th scope="col">Prestation</th>
+                        <th scope="col">Prix</th>
+                        <th scope="col">Durée</th>
+                        <th scope="col" class="kitlast-service-table__modify">Modifier</th>
+                        <th scope="col" class="kitlast-service-table__delete">Supprimer</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {% if category.services.all %}
+                      {% for service in category.services.all %}
+                      <tr>
+                        <td data-label="Prestation">{{ service.name }}</td>
+                        <td data-label="Prix">{% if service.price %}{{ service.price }} €{% else %}—{% endif %}</td>
+                        <td data-label="Durée">{% if service.duration_minutes %}{{ service.duration_minutes }} min{% else %}—{% endif %}</td>
+                        <td data-label="Modifier" class="kitlast-service-table__modify-cell">
+                          <a href="{% url 'dashboard' %}?section=services&show=service-form&service_id={{ service.id }}" class="kitlast-service-action">Modifier</a>
+                        </td>
+                        <td data-label="Supprimer" class="kitlast-service-table__delete-cell">
+                          <form method="post" action="{% url 'dashboard' %}?section=services" class="kitlast-service-action-form" onsubmit="return confirm('Supprimer cette prestation ?');">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="delete_service">
+                            <input type="hidden" name="service_id" value="{{ service.id }}">
+                            <button type="submit" class="kitlast-service-action kitlast-service-action--danger">Supprimer</button>
+                          </form>
+                        </td>
+                      </tr>
+                      {% endfor %}
+                      {% else %}
+                      <tr>
+                        <td colspan="5" class="kitlast-empty">Aucune prestation pour cette catégorie.</td>
+                      </tr>
+                      {% endif %}
+                    </tbody>
+                  </table>
+                </div>
+              </li>
+              {% endfor %}
+            </ul>
+            {% else %}
+            <p class="kitlast-empty">Aucune catégorie pour le moment. Ajoutez votre première catégorie pour structurer
+              vos prestations.</p>
             {% endif %}
           </div>
-          <div class="kitlast-modal__actions">
-            <button type="button" class="kitlast-button kitlast-button--ghost" data-modal-close>Annuler</button>
-            <button type="submit" class="kitlast-button">Valider</button>
-          </div>
-        </form>
+        </section>
+
+        <section class="kitlast-content-section{% if section == 'planning' %} is-active{% endif %}"
+          data-section="planning">
+          <article class="kitlast-panel-card">
+            <h2>Gestion des plannings</h2>
+            <p class="kitlast-panel-card__text">Créez des plannings précis, bloquez vos indisponibilités et synchronisez
+              votre agenda pour éviter les doublons.</p>
+          </article>
+        </section>
+
+        <section class="kitlast-content-section{% if section == 'clients' %} is-active{% endif %}"
+          data-section="clients">
+          <article class="kitlast-panel-card">
+            <h2>Gestion des clients</h2>
+            <p class="kitlast-panel-card__text">Retrouvez l'historique de vos clients, leurs préférences et facilitez
+              vos échanges pour fidéliser votre communauté.</p>
+          </article>
+        </section>
       </div>
     </div>
-  </div>
-
-  <div class="kitlast-modal" data-service-modal {% if not show_service_form and not service_form.errors %}hidden{% endif %}>
-    <div class="kitlast-modal__overlay" data-modal-close></div>
-    <div class="kitlast-modal__content" role="dialog" aria-modal="true" aria-labelledby="service-modal-title">
-      <header class="kitlast-modal__header">
-        <h2 id="service-modal-title">Ajouter une prestation</h2>
-        <button type="button" class="kitlast-modal__close" data-modal-close aria-label="Fermer la modale">×</button>
-      </header>
-      <div class="kitlast-modal__body">
-        <form method="post" action="{% url 'dashboard' %}?section=services" class="kitlast-modal__form">
-          {% csrf_token %}
-          <input type="hidden" name="action" value="add_service">
-          {% if service_form.non_field_errors %}
-            <div class="kitlast-field__errors">
-              {% for error in service_form.non_field_errors %}{{ error }}{% endfor %}
-            </div>
+  </section>
+</div>
+<div class="kitlast-modal" data-category-modal {% if not show_category_form and not category_form.errors %}hidden{%endif %}>
+  <div class="kitlast-modal__overlay" data-modal-close></div>
+  <div class="kitlast-modal__content" role="dialog" aria-modal="true" aria-labelledby="category-modal-title">
+    <header class="kitlast-modal__header">
+      <h2 id="category-modal-title">Ajouter une catégorie</h2>
+      <button type="button" class="kitlast-modal__close" data-modal-close aria-label="Fermer la modale">×</button>
+    </header>
+    <div class="kitlast-modal__body">
+      <form method="post" action="{% url 'dashboard' %}?section=services" class="kitlast-modal__form">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="add_category">
+        <div class="kitlast-field">
+          {{ category_form.name.label_tag }}
+          {{ category_form.name }}
+          {% if category_form.name.errors %}
+          <div class="kitlast-field__errors">
+            {% for error in category_form.name.errors %}{{ error }}{% endfor %}
+          </div>
           {% endif %}
-          <div class="kitlast-field">
-            {{ service_form.name.label_tag }}
-            {{ service_form.name }}
-            {% if service_form.name.errors %}
-              <div class="kitlast-field__errors">
-                {% for error in service_form.name.errors %}{{ error }}{% endfor %}
-              </div>
-            {% endif %}
-          </div>
-          <div class="kitlast-field">
-            {{ service_form.category.label_tag }}
-            {{ service_form.category }}
-            {% if service_form.category.errors %}
-              <div class="kitlast-field__errors">
-                {% for error in service_form.category.errors %}{{ error }}{% endfor %}
-              </div>
-            {% endif %}
-          </div>
-          <div class="kitlast-modal__row">
-            <div class="kitlast-field">
-              {{ service_form.price.label_tag }}
-              {{ service_form.price }}
-              {% if service_form.price.errors %}
-                <div class="kitlast-field__errors">
-                  {% for error in service_form.price.errors %}{{ error }}{% endfor %}
-                </div>
-              {% endif %}
-            </div>
-            <div class="kitlast-field">
-              {{ service_form.duration_minutes.label_tag }}
-              {{ service_form.duration_minutes }}
-              {% if service_form.duration_minutes.errors %}
-                <div class="kitlast-field__errors">
-                  {% for error in service_form.duration_minutes.errors %}{{ error }}{% endfor %}
-                </div>
-              {% endif %}
-            </div>
-          </div>
-          <div class="kitlast-modal__actions">
-            <button type="button" class="kitlast-button kitlast-button--ghost" data-modal-close>Annuler</button>
-            <button type="submit" class="kitlast-button">Valider</button>
-          </div>
-        </form>
-      </div>
+        </div>
+        <div class="kitlast-modal__actions">
+          <button type="button" class="kitlast-button kitlast-button--ghost" data-modal-close>Annuler</button>
+          <button type="submit" class="kitlast-button">Valider</button>
+        </div>
+      </form>
     </div>
   </div>
+</div>
 
-  <script>
-    (function () {
-      const toggle = document.querySelector('.kitlast-dashboard-sidebar__toggle');
-      const subnav = document.getElementById('services-subnav');
-      const sectionContainer = document.querySelector('.kitlast-dashboard-content');
-      const sections = document.querySelectorAll('.kitlast-content-section');
-      const navLinks = document.querySelectorAll('[data-section-target]');
-      const addCategoryLinks = document.querySelectorAll('[data-action="show-category-form"]');
-      const addServiceLinks = document.querySelectorAll('[data-action="show-service-form"]');
-      const categoryModal = document.querySelector('[data-category-modal]');
-      const serviceModal = document.querySelector('[data-service-modal]');
-      const categoryFormField = categoryModal ? categoryModal.querySelector('input[type="text"]') : null;
-      const serviceNameField = serviceModal ? serviceModal.querySelector('input[name="name"]') : null;
+<div class="kitlast-modal" data-service-modal {% if not show_service_form and not service_form.errors %}hidden{% endif%}>
+  <div class="kitlast-modal__overlay" data-modal-close></div>
+  <div class="kitlast-modal__content" role="dialog" aria-modal="true" aria-labelledby="service-modal-title">
+    <header class="kitlast-modal__header">
+      <h2 id="service-modal-title">{% if service_form.instance.pk %}Modifier une prestation{% else %}Ajouter une
+        prestation{% endif %}</h2>
+      <button type="button" class="kitlast-modal__close" data-modal-close aria-label="Fermer la modale">×</button>
+    </header>
+    <div class="kitlast-modal__body">
+      <form method="post" action="{% url 'dashboard' %}?section=services" class="kitlast-modal__form">
+        {% csrf_token %}
+        <input type="hidden" name="action"
+          value="{% if service_form.instance.pk %}update_service{% else %}add_service{% endif %}">
+        {% if service_form.instance.pk %}
+        <input type="hidden" name="service_id" value="{{ service_form.instance.pk }}">
+        {% endif %}
+        {% if service_form.non_field_errors %}
+        <div class="kitlast-field__errors">
+          {% for error in service_form.non_field_errors %}{{ error }}{% endfor %}
+        </div>
+        {% endif %}
+        <div class="kitlast-field">
+          {{ service_form.name.label_tag }}
+          {{ service_form.name }}
+          {% if service_form.name.errors %}
+          <div class="kitlast-field__errors">
+            {% for error in service_form.name.errors %}{{ error }}{% endfor %}
+          </div>
+          {% endif %}
+        </div>
+        <div class="kitlast-field">
+          {{ service_form.category.label_tag }}
+          {{ service_form.category }}
+          {% if service_form.category.errors %}
+          <div class="kitlast-field__errors">
+            {% for error in service_form.category.errors %}{{ error }}{% endfor %}
+          </div>
+          {% endif %}
+        </div>
+        <div class="kitlast-modal__row">
+          <div class="kitlast-field">
+            {{ service_form.price.label_tag }}
+            {{ service_form.price }}
+            {% if service_form.price.errors %}
+            <div class="kitlast-field__errors">
+              {% for error in service_form.price.errors %}{{ error }}{% endfor %}
+            </div>
+            {% endif %}
+          </div>
+          <div class="kitlast-field">
+            {{ service_form.duration_minutes.label_tag }}
+            {{ service_form.duration_minutes }}
+            {% if service_form.duration_minutes.errors %}
+            <div class="kitlast-field__errors">
+              {% for error in service_form.duration_minutes.errors %}{{ error }}{% endfor %}
+            </div>
+            {% endif %}
+          </div>
+        </div>
+        <div class="kitlast-modal__actions">
+          <button type="button" class="kitlast-button kitlast-button--ghost" data-modal-close>Annuler</button>
+          <button type="submit" class="kitlast-button">Valider</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
 
-      let currentSection = sectionContainer ? sectionContainer.dataset.activeSection || 'overview' : 'overview';
+<script>
+  (function () {
+    const toggle = document.querySelector('.kitlast-dashboard-sidebar__toggle');
+    const subnav = document.getElementById('services-subnav');
+    const sectionContainer = document.querySelector('.kitlast-dashboard-content');
+    const sections = document.querySelectorAll('.kitlast-content-section');
+    const navLinks = document.querySelectorAll('[data-section-target]');
+    const categoryModal = document.querySelector('[data-category-modal]');
+    const serviceModal = document.querySelector('[data-service-modal]');
+    const categoryFormField = categoryModal ? categoryModal.querySelector('input[type="text"]') : null;
+    const serviceNameField = serviceModal ? serviceModal.querySelector('input[name="name"]') : null;
 
-      function syncUrl() {
-        try {
-          const url = new URL(window.location);
-          url.searchParams.set('section', currentSection);
-          if (currentSection === 'services') {
-            if (categoryModal && !categoryModal.hasAttribute('hidden')) {
-              url.searchParams.set('show', 'category-form');
-            } else if (serviceModal && !serviceModal.hasAttribute('hidden')) {
-              url.searchParams.set('show', 'service-form');
-            } else {
-              url.searchParams.delete('show');
-            }
+    let currentSection = sectionContainer ? sectionContainer.dataset.activeSection || 'overview' : 'overview';
+
+    function syncUrl() {
+      try {
+        const url = new URL(window.location);
+        url.searchParams.set('section', currentSection);
+        if (currentSection === 'services') {
+          if (categoryModal && !categoryModal.hasAttribute('hidden')) {
+            url.searchParams.set('show', 'category-form');
+          } else if (serviceModal && !serviceModal.hasAttribute('hidden')) {
+            url.searchParams.set('show', 'service-form');
           } else {
             url.searchParams.delete('show');
           }
-          window.history.replaceState(null, '', url);
-        } catch (err) {
-          /* noop */
+        } else {
+          url.searchParams.delete('show');
         }
+        window.history.replaceState(null, '', url);
+      } catch (err) {
+        /* noop */
       }
+    }
 
-      function setActiveSection(sectionName) {
-        if (!sectionContainer) return;
-        currentSection = sectionName;
-        sectionContainer.setAttribute('data-active-section', sectionName);
-        sections.forEach((section) => {
-          section.classList.toggle('is-active', section.dataset.section === sectionName);
-        });
-        if (sectionName === 'services' && toggle && subnav) {
-          toggle.setAttribute('aria-expanded', 'true');
-          subnav.hidden = false;
-        } else if (sectionName !== 'services') {
-          closeModal(categoryModal);
-          closeModal(serviceModal);
-        }
-        syncUrl();
+    function setActiveSection(sectionName) {
+      if (!sectionContainer) return;
+      currentSection = sectionName;
+      sectionContainer.setAttribute('data-active-section', sectionName);
+      sections.forEach((section) => {
+        section.classList.toggle('is-active', section.dataset.section === sectionName);
+      });
+      if (sectionName === 'services' && toggle && subnav) {
+        toggle.setAttribute('aria-expanded', 'true');
+        subnav.hidden = false;
+      } else if (sectionName !== 'services') {
+        closeModal(categoryModal);
+        closeModal(serviceModal);
       }
+      syncUrl();
+    }
 
-      function openModal(modal, focusElement) {
-        if (!modal) return;
-        modal.removeAttribute('hidden');
-        if (focusElement) {
-          window.requestAnimationFrame(() => focusElement.focus());
-        }
-        syncUrl();
+    function openModal(modal, focusElement) {
+      if (!modal) return;
+      modal.removeAttribute('hidden');
+      if (focusElement) {
+        window.requestAnimationFrame(() => focusElement.focus());
       }
+      syncUrl();
+    }
 
-      function closeModal(modal) {
-        if (!modal) return;
-        modal.setAttribute('hidden', '');
-        syncUrl();
-      }
+    function closeModal(modal) {
+      if (!modal) return;
+      modal.setAttribute('hidden', '');
+      syncUrl();
+    }
 
-      function attachModalHandlers(modal, focusElement) {
-        if (!modal) return null;
-        modal.querySelectorAll('[data-modal-close]').forEach((btn) => {
-          btn.addEventListener('click', (event) => {
-            event.preventDefault();
-            closeModal(modal);
-          });
-        });
-        modal.addEventListener('click', (event) => {
-          if (event.target.dataset && event.target.dataset.modalClose !== undefined) {
-            closeModal(modal);
-          }
-        });
-        return {
-          open: () => openModal(modal, focusElement),
-          close: () => closeModal(modal),
-        };
-      }
-
-      const categoryModalHandlers = attachModalHandlers(categoryModal, categoryFormField);
-      const serviceModalHandlers = attachModalHandlers(serviceModal, serviceNameField);
-
-      if (toggle && subnav) {
-        toggle.addEventListener('click', () => {
-          const isExpanded = toggle.getAttribute('aria-expanded') === 'true';
-          toggle.setAttribute('aria-expanded', String(!isExpanded));
-          subnav.hidden = isExpanded;
-          setActiveSection('services');
-        });
-      }
-
-      navLinks.forEach((link) => {
-        link.addEventListener('click', (event) => {
-          const targetSection = link.dataset.sectionTarget;
-          if (!targetSection) return;
-          setActiveSection(targetSection);
+    function attachModalHandlers(modal, focusElement) {
+      if (!modal) return null;
+      modal.querySelectorAll('[data-modal-close]').forEach((btn) => {
+        btn.addEventListener('click', (event) => {
           event.preventDefault();
+          closeModal(modal);
         });
       });
-
-      addCategoryLinks.forEach((link) => {
-        link.addEventListener('click', (event) => {
-          event.preventDefault();
-          setActiveSection('services');
-          if (categoryModalHandlers) {
-            categoryModalHandlers.open();
-          }
-        });
-      });
-
-      addServiceLinks.forEach((link) => {
-        link.addEventListener('click', (event) => {
-          event.preventDefault();
-          setActiveSection('services');
-          if (serviceModalHandlers) {
-            serviceModalHandlers.open();
-          }
-        });
-      });
-
-      document.addEventListener('keydown', (event) => {
-        if (event.key !== 'Escape') {
-          return;
-        }
-        if (categoryModal && !categoryModal.hasAttribute('hidden')) {
-          closeModal(categoryModal);
-        }
-        if (serviceModal && !serviceModal.hasAttribute('hidden')) {
-          closeModal(serviceModal);
+      modal.addEventListener('click', (event) => {
+        if (event.target.dataset && event.target.dataset.modalClose !== undefined) {
+          closeModal(modal);
         }
       });
+      return {
+        open: () => openModal(modal, focusElement),
+        close: () => closeModal(modal),
+      };
+    }
 
-      if (sectionContainer) {
-        const active = sectionContainer.dataset.activeSection;
-        setActiveSection(active || 'overview');
-        if ((active === 'services') && categoryModalHandlers && {{ show_category_form|yesno:'true,false' }} ) {
-          categoryModalHandlers.open();
-        }
-        if ((active === 'services') && serviceModalHandlers && {{ show_service_form|yesno:'true,false' }} ) {
-          serviceModalHandlers.open();
-        }
+    const categoryModalHandlers = attachModalHandlers(categoryModal, categoryFormField);
+    const serviceModalHandlers = attachModalHandlers(serviceModal, serviceNameField);
+
+    if (toggle && subnav) {
+      toggle.addEventListener('click', () => {
+        const isExpanded = toggle.getAttribute('aria-expanded') === 'true';
+        toggle.setAttribute('aria-expanded', String(!isExpanded));
+        subnav.hidden = isExpanded;
+        setActiveSection('services');
+      });
+    }
+
+    navLinks.forEach((link) => {
+      link.addEventListener('click', (event) => {
+        const targetSection = link.dataset.sectionTarget;
+        if (!targetSection) return;
+        setActiveSection(targetSection);
+        event.preventDefault();
+      });
+    });
+
+    document.addEventListener('keydown', (event) => {
+      if (event.key !== 'Escape') {
+        return;
       }
-    })();
-  </script>
+      if (categoryModal && !categoryModal.hasAttribute('hidden')) {
+        closeModal(categoryModal);
+      }
+      if (serviceModal && !serviceModal.hasAttribute('hidden')) {
+        closeModal(serviceModal);
+      }
+    });
+
+    if (sectionContainer) {
+      const active = sectionContainer.dataset.activeSection;
+      setActiveSection(active || 'overview');
+      if ((active === 'services') && categoryModalHandlers && {{ show_category_form|yesno:'true,false' }} ) {
+        categoryModalHandlers.open();
+      }
+      if ((active === 'services') && serviceModalHandlers && {{ show_service_form|yesno:'true,false' }} ) {
+        serviceModalHandlers.open();
+      }
+    }
+  })();
+</script>
 {% endblock %}

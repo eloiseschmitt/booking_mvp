@@ -43,7 +43,7 @@ a:focus {
     display: flex;
     flex-direction: column;
     background: radial-gradient(circle at top left, rgba(0, 106, 78, 0.12) 0%, rgba(0, 106, 78, 0) 55%),
-                linear-gradient(135deg, var(--bg-soft) 0%, #FFFFFF 65%);
+        linear-gradient(135deg, var(--bg-soft) 0%, #FFFFFF 65%);
 }
 
 .kitlast-login__header {
@@ -454,7 +454,7 @@ a:focus {
     color: var(--muted);
 }
 
-.kitlast-section-header + .kitlast-category-list {
+.kitlast-section-header+.kitlast-category-board {
     margin-top: 24px;
 }
 
@@ -580,7 +580,7 @@ a:focus {
     color: #fff;
 }
 
-.kitlast-category-list ul {
+.kitlast-category-board ul {
     list-style: none;
     margin: 0;
     padding: 0;
@@ -589,7 +589,12 @@ a:focus {
     gap: 18px;
 }
 
-.kitlast-category-list > ul > li {
+.kitlast-category-board li {
+    list-style: none;
+}
+
+
+.kitlast-category-board>ul>li {
     background: var(--surface);
     border-radius: 16px;
     padding: 20px 24px;
@@ -603,38 +608,161 @@ a:focus {
     margin: 0;
 }
 
-.kitlast-service-list {
-    list-style: none;
-    margin: 16px 0 0;
-    padding: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
+.kitlast-service-table-wrapper {
+    margin-top: 16px;
+    overflow-x: auto;
 }
 
-.kitlast-service-list li {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: space-between;
-    align-items: center;
-    gap: 8px;
-    padding: 12px 14px;
-    border-radius: 12px;
-    background: rgba(0, 106, 78, 0.05);
+
+.kitlast-service-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    table-layout: fixed;
+    min-width: 520px;
 }
 
-.kitlast-service-list__name {
-    font-weight: 600;
-}
-
-.kitlast-service-list__meta {
+.kitlast-service-table thead th {
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    font-size: 0.75rem;
+    font-weight: 700;
     color: var(--muted);
+    background: rgba(0, 106, 78, 0.06);
+    padding: 16px 18px;
+    text-align: left;
+    white-space: nowrap;
+}
+
+.kitlast-service-table tbody tr {
+    border-bottom: 1px solid rgba(0, 106, 78, 0.1);
+}
+
+.kitlast-service-table tbody tr:last-child {
+    border-bottom: none;
+}
+
+.kitlast-service-table td {
+    padding: 18px;
+    font-size: 1rem;
+    vertical-align: middle;
+}
+
+
+.kitlast-service-table__modify,
+.kitlast-service-table__delete,
+.kitlast-service-table__modify-cell,
+.kitlast-service-table__delete-cell,
+.kitlast-service-table td[data-label="Modifier"],
+.kitlast-service-table td[data-label="Supprimer"] {
+    text-align: right;
+}
+
+.kitlast-service-action {
+    color: var(--secondary);
+    font-weight: 600;
     font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    transition: color 0.18s ease;
+}
+
+.kitlast-service-action:hover,
+.kitlast-service-action:focus {
+    color: var(--brand-600);
+}
+
+.kitlast-service-action--danger {
+    color: var(--accent);
+}
+
+.kitlast-service-action--danger:hover,
+.kitlast-service-action--danger:focus {
+    color: var(--brand-600);
+}
+
+.kitlast-service-action-form {
+    display: inline;
+}
+
+.kitlast-service-action-form button {
+    background: transparent;
+    border: none;
+    padding: 0;
+    font: inherit;
+    color: var(--secondary);
+    cursor: pointer;
+    transition: color 0.18s ease;
+    font-weight: 600;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+}
+
+.kitlast-service-action-form button:hover,
+.kitlast-service-action-form button:focus {
+    color: var(--brand-600);
+}
+
+@media (max-width: 720px) {
+    .kitlast-service-table thead {
+        display: none;
+    }
+
+    .kitlast-service-table,
+    .kitlast-service-table tbody,
+    .kitlast-service-table tr,
+    .kitlast-service-table td {
+        display: block;
+        width: 100%;
+    }
+
+    .kitlast-service-table tr {
+        margin-bottom: 18px;
+        border: 1px solid rgba(0, 106, 78, 0.08);
+        border-radius: 14px;
+        overflow: hidden;
+        background: rgba(0, 106, 78, 0.04);
+    }
+
+    .kitlast-service-table td {
+        border-bottom: 1px solid rgba(0, 106, 78, 0.08);
+        position: relative;
+        padding: 12px 16px 12px 130px;
+    }
+
+    .kitlast-service-table td:last-child {
+        border-bottom: none;
+    }
+
+    .kitlast-service-table td::before {
+        content: attr(data-label);
+        position: absolute;
+        left: 16px;
+        top: 50%;
+        transform: translateY(-50%);
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        font-size: 0.75rem;
+        color: var(--muted);
+    }
+
+    .kitlast-service-table__modify-cell,
+    .kitlast-service-table__delete-cell,
+    .kitlast-service-table td[data-label="Modifier"],
+    .kitlast-service-table td[data-label="Supprimer"] {
+        text-align: left;
+    }
 }
 
 .kitlast-empty {
     color: var(--muted);
     margin: 12px 0 0;
+}
+
+.kitlast-empty.--within {
+    margin-left: 18px;
 }
 
 .kitlast-panel-card {

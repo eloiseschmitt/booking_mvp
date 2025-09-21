@@ -5,6 +5,7 @@ from django.urls import reverse
 
 from .forms import CategoryForm, ServiceForm
 from .models import Category, Service
+from .services import delete_service, prepare_service_form, save_service_form
 
 @login_required
 def dashboard(request):
@@ -14,6 +15,12 @@ def dashboard(request):
     category_form = CategoryForm()
     service_form = ServiceForm()
     show_service_form = request.GET.get("show") == "service-form"
+    service_id_param = request.GET.get("service_id")
+
+    if service_id_param:
+        service_form, _ = prepare_service_form(service_id_param)
+        show_service_form = True
+        section = "services"
 
     if request.method == "POST":
         action = request.POST.get("action")
@@ -33,6 +40,24 @@ def dashboard(request):
                 service_form.save()
                 redirect_url = f"{reverse('dashboard')}?section=services"
                 return redirect(redirect_url)
+        elif action == "update_service":
+            section = "services"
+            service_id = request.POST.get("service_id")
+            form, _ = prepare_service_form(service_id, data=request.POST)
+            if form.is_valid():
+                save_service_form(form)
+                redirect_url = f"{reverse('dashboard')}?section=services"
+                return redirect(redirect_url)
+            else:
+                show_service_form = True
+                service_form = form
+        elif action == "delete_service":
+            section = "services"
+            service_id = request.POST.get("service_id")
+            if service_id:
+                delete_service(service_id)
+            redirect_url = f"{reverse('dashboard')}?section=services"
+            return redirect(redirect_url)
         else:
             section = "overview"
 
