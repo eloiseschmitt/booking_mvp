@@ -1,6 +1,10 @@
 {% extends "base.html" %}
 {% load static %}
 {% block title %}{{ workshop.name }} | Kitlast{% endblock %}
+{% block head %}
+  {{ block.super }}
+  <link rel="stylesheet" href="{% static 'css/workshop.css' %}">
+{% endblock %}
 {% block content %}
 <section class="workshop-hero">
   <div class="workshop-hero__image">
@@ -28,7 +32,10 @@
             <li>
               <div class="workshop-service__main">
                 <span class="workshop-service__name">{{ service.name }}</span>
-                {% if service.price %}<span class="workshop-service__price">{{ service.price }} €</span>{% endif %}
+                <span class="workshop-service__cta">
+                  {% if service.price %}<span class="workshop-service__price">{{ service.price }} €</span>{% endif %}
+                  <a href="#" class="workshop-service__button">Réserver</a>
+                </span>
               </div>
               {% if service.duration_minutes %}
                 <p class="workshop-service__meta">Durée : {{ service.duration_minutes }} min</p>

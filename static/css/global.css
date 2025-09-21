@@ -1,0 +1,153 @@
+@import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600&family=Poppins:wght@500;600&display=swap');
+
+:root {
+    --brand: #006A4E;
+    --brand-600: #005A42;
+    --brand-300: #338771;
+    --secondary: #3B6F72;
+    --accent: #E07B39;
+    --text: #2C2C2C;
+    --muted: #626A68;
+    --bg-soft: #F5F0E6;
+    --surface: #FFFFFF;
+    --surface-alt: #FAF7F1;
+    --border: #E3E7E4;
+}
+
+body {
+    font-family: 'Open Sans', sans-serif;
+    background: linear-gradient(135deg, var(--bg-soft) 0%, #E6F4EF 45%, #FFFFFF 100%);
+    color: var(--text);
+    margin: 0;
+}
+
+h1,
+h2 {
+    font-family: 'Poppins', sans-serif;
+    margin: 0;
+}
+
+a {
+    color: var(--brand);
+    text-decoration: none;
+    transition: color 0.18s ease;
+}
+
+a:hover,
+a:focus {
+    color: var(--brand-600);
+}
+
+.kitlast-form {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.kitlast-field {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.kitlast-field label {
+    font-weight: 600;
+    font-size: 0.9rem;
+    letter-spacing: 0.02em;
+    color: var(--muted);
+    text-transform: uppercase;
+}
+
+.kitlast-field input,
+.kitlast-field select,
+.kitlast-field textarea,
+.kitlast-input {
+    width: 100%;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 14px 16px;
+    font-size: 1rem;
+    transition: border-color 0.18s ease, box-shadow 0.18s ease;
+    font-family: 'Open Sans', sans-serif;
+    background: #fff;
+}
+
+.kitlast-field input:focus,
+.kitlast-field select:focus,
+.kitlast-field textarea:focus,
+.kitlast-input:focus {
+    border-color: var(--brand-300);
+    box-shadow: 0 0 0 3px rgba(0, 106, 78, 0.18);
+    outline: none;
+}
+
+.kitlast-field__errors {
+    color: #7A3E06;
+    font-size: 0.85rem;
+}
+
+.kitlast-field__errors ul {
+    margin: 0;
+    padding-left: 18px;
+}
+
+.kitlast-submit {
+    margin-top: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.kitlast-submit button {
+    background: var(--brand);
+    border: 1px solid var(--brand);
+    border-radius: 14px;
+    color: #fff;
+    font-size: 1.05rem;
+    font-weight: 600;
+    padding: 14px;
+    cursor: pointer;
+    transition: background 0.18s ease, box-shadow 0.18s ease;
+}
+
+.kitlast-submit button:hover {
+    background: var(--brand-600);
+    box-shadow: 0 12px 26px rgba(0, 90, 66, 0.22);
+}
+
+.kitlast-button {
+    background: var(--brand);
+    border: 1px solid var(--brand);
+    border-radius: 14px;
+    color: #fff;
+    cursor: pointer;
+    font-family: 'Poppins', sans-serif;
+    font-size: 1rem;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    padding: 12px 28px;
+    transition: background 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
+}
+
+.kitlast-button:hover,
+.kitlast-button:focus {
+    background: var(--brand-600);
+    box-shadow: 0 12px 24px rgba(0, 90, 66, 0.22);
+    transform: translateY(-1px);
+    outline: none;
+}
+
+.kitlast-button:active {
+    background: var(--brand-300);
+    box-shadow: 0 6px 16px rgba(0, 90, 66, 0.24);
+    transform: translateY(0);
+}
+
+.kitlast-empty {
+    color: var(--muted);
+    margin: 12px 0 0;
+}
+
+.kitlast-empty.--within {
+    margin-left: 18px;
+}
