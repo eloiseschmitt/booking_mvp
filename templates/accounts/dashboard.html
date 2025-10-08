@@ -83,57 +83,45 @@
 
           <div class="kitlast-category-board">
             {% if categories %}
-            <ul>
-              {% for category in categories %}
-              <li>
-                <div class="kitlast-category-list__header">
-                  <h3>{{ category.name }}</h3>
-                </div>
-                <div class="kitlast-service-table-wrapper">
-                  <table class="kitlast-service-table">
-                    <thead>
-                      <tr>
-                        <th scope="col">Prestation</th>
-                        <th scope="col">Prix</th>
-                        <th scope="col">Durée</th>
-                        <th scope="col" class="kitlast-service-table__modify">Modifier</th>
-                        <th scope="col" class="kitlast-service-table__delete">Supprimer</th>
-                      </tr>
-                    </thead>
-                    <tbody>
+              <ul>
+                {% for category in categories %}
+                  <li class="kitlast-category-card">
+                    <header class="kitlast-category-card__header">
+                      <h3>{{ category.name|upper }}</h3>
+                    </header>
+                    <ul class="kitlast-service-lines">
                       {% if category.services.all %}
-                      {% for service in category.services.all %}
-                      <tr>
-                        <td data-label="Prestation">{{ service.name }}</td>
-                        <td data-label="Prix">{% if service.price %}{{ service.price }} €{% else %}—{% endif %}</td>
-                        <td data-label="Durée">{% if service.duration_minutes %}{{ service.duration_minutes }} min{% else %}—{% endif %}</td>
-                        <td data-label="Modifier" class="kitlast-service-table__modify-cell">
-                          <a href="{% url 'dashboard' %}?section=services&show=service-form&service_id={{ service.id }}" class="kitlast-service-action">Modifier</a>
-                        </td>
-                        <td data-label="Supprimer" class="kitlast-service-table__delete-cell">
-                          <form method="post" action="{% url 'dashboard' %}?section=services" class="kitlast-service-action-form" onsubmit="return confirm('Supprimer cette prestation ?');">
-                            {% csrf_token %}
-                            <input type="hidden" name="action" value="delete_service">
-                            <input type="hidden" name="service_id" value="{{ service.id }}">
-                            <button type="submit" class="kitlast-service-action kitlast-service-action--danger">Supprimer</button>
-                          </form>
-                        </td>
-                      </tr>
-                      {% endfor %}
+                        {% for service in category.services.all %}
+                          <li class="kitlast-service-line">
+                            <div class="kitlast-service-line__info">
+                              <span class="kitlast-service-line__name">{{ service.name }}</span>
+                              <span class="kitlast-service-line__meta">
+                                {% if service.duration_minutes %}{{ service.duration_minutes }} min{% endif %}
+                                {% if service.duration_minutes and service.price %} · {% endif %}
+                                {% if service.price %}{{ service.price }} €{% endif %}
+                              </span>
+                            </div>
+                            <div class="kitlast-service-line__actions">
+                              <button type="button" class="kitlast-service-line__action kitlast-service-line__action--muted">Dupliquer</button>
+                              <a href="{% url 'dashboard' %}?section=services&show=service-form&service_id={{ service.id }}" class="kitlast-service-line__action">Modifier</a>
+                              <form method="post" action="{% url 'dashboard' %}?section=services" class="kitlast-service-line__form" onsubmit="return confirm('Supprimer cette prestation ?');">
+                                {% csrf_token %}
+                                <input type="hidden" name="action" value="delete_service">
+                                <input type="hidden" name="service_id" value="{{ service.id }}">
+                                <button type="submit" class="kitlast-service-line__action kitlast-service-line__action--danger">Supprimer</button>
+                              </form>
+                            </div>
+                          </li>
+                        {% endfor %}
                       {% else %}
-                      <tr>
-                        <td colspan="5" class="kitlast-empty">Aucune prestation pour cette catégorie.</td>
-                      </tr>
+                        <li class="kitlast-service-line kitlast-service-line--empty">Aucune prestation pour cette catégorie.</li>
                       {% endif %}
-                    </tbody>
-                  </table>
-                </div>
-              </li>
-              {% endfor %}
-            </ul>
+                    </ul>
+                  </li>
+                {% endfor %}
+              </ul>
             {% else %}
-            <p class="kitlast-empty">Aucune catégorie pour le moment. Ajoutez votre première catégorie pour structurer
-              vos prestations.</p>
+              <p class="kitlast-empty">Aucune catégorie pour le moment. Ajoutez votre première catégorie pour structurer vos prestations.</p>
             {% endif %}
           </div>
         </section>
