@@ -5,6 +5,7 @@ from django.urls import reverse
 
 from .forms import CategoryForm, ServiceForm
 from .models import Category, Service, Workshop
+from .planning import PLANNER_HOURS, SAMPLE_WEEK
 from .services import delete_service, prepare_service_form, save_service_form
 
 @login_required
@@ -16,11 +17,17 @@ def dashboard(request):
     service_form = ServiceForm()
     show_service_form = request.GET.get("show") == "service-form"
     service_id_param = request.GET.get("service_id")
+    category_for_new_service = request.GET.get("category")
 
     if service_id_param:
         service_form, _ = prepare_service_form(service_id_param)
         show_service_form = True
         section = "services"
+    elif show_service_form and category_for_new_service:
+        if Category.objects.filter(pk=category_for_new_service).exists():
+            service_form = ServiceForm(initial={"category": category_for_new_service})
+            section = "services"
+
 
     if request.method == "POST":
         action = request.POST.get("action")
@@ -68,6 +75,8 @@ def dashboard(request):
         "show_category_form": show_category_form,
         "service_form": service_form,
         "show_service_form": show_service_form,
+        "planner_hours": PLANNER_HOURS,
+        "planning_days": SAMPLE_WEEK,
     }
     return render(request, "accounts/dashboard.html", context)
 

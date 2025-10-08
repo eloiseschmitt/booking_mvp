@@ -128,11 +128,45 @@
 
         <section class="kitlast-content-section{% if section == 'planning' %} is-active{% endif %}"
           data-section="planning">
-          <article class="kitlast-panel-card">
-            <h2>Gestion des plannings</h2>
-            <p class="kitlast-panel-card__text">Créez des plannings précis, bloquez vos indisponibilités et synchronisez
-              votre agenda pour éviter les doublons.</p>
-          </article>
+          <div class="kitlast-planner">
+            <header class="kitlast-planner__header">
+              <div>
+                <span class="kitlast-planner__week">Semaine 38 · 15 → 21 septembre</span>
+                <span class="kitlast-planner__range">Vue semaine</span>
+              </div>
+              <nav class="kitlast-planner__toolbar" aria-label="Options de planification">
+                <button type="button" class="kitlast-planner__button">Aujourd’hui</button>
+                <button type="button" class="kitlast-planner__button kitlast-planner__button--empty">Vue jour</button>
+                <button type="button" class="kitlast-planner__button kitlast-planner__button--active">Vue semaine</button>
+              </nav>
+            </header>
+            <div class="kitlast-planner__body">
+              <div class="kitlast-planner__hours">
+                {% for hour in planner_hours %}
+                <span>{{ hour }}</span>
+                {% endfor %}
+              </div>
+              <div class="kitlast-planner__columns">
+                {% for day in planning_days %}
+                <div class="kitlast-planner__column">
+                  <header class="kitlast-planner__column-header">
+                    <span class="kitlast-planner__column-day">{{ day.label }}</span>
+                    <span class="kitlast-planner__column-date">{{ day.date }}</span>
+                  </header>
+                  <div class="kitlast-planner__timeline">
+                    {% for event in day.events %}
+                    <div class="kitlast-planner__event"
+                      style="top: {{ event.top_pct }}%; height: {{ event.height_pct }}%; background-color: {{ event.color }};">
+                      <span class="kitlast-planner__event-time">{{ event.time }}</span>
+                      <span class="kitlast-planner__event-title">{{ event.title }}</span>
+                    </div>
+                    {% endfor %}
+                  </div>
+                </div>
+                {% endfor %}
+              </div>
+            </div>
+          </div>
         </section>
 
         <section class="kitlast-content-section{% if section == 'clients' %} is-active{% endif %}"

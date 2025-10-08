@@ -467,15 +467,6 @@
 }
 
 @media (max-width: 960px) {
-    .kitlast-category-card__header {
-        flex-direction: column;
-        align-items: flex-start;
-    }
-
-    .kitlast-category-card__actions {
-        gap: 12px;
-    }
-
     .kitlast-service-line {
         flex-direction: column;
         align-items: flex-start;
@@ -509,6 +500,184 @@
     color: var(--muted);
     margin: 0;
     line-height: 1.6;
+}
+
+.kitlast-planner {
+    background: var(--surface);
+    border-radius: 18px;
+    border: 1px solid rgba(0, 106, 78, 0.12);
+    box-shadow: 0 18px 40px rgba(17, 53, 44, 0.12);
+    padding: 28px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.kitlast-planner__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.kitlast-planner__week {
+    font-family: 'Poppins', sans-serif;
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+
+.kitlast-planner__range {
+    display: inline-block;
+    margin-left: 12px;
+    color: var(--muted);
+    font-size: 0.9rem;
+}
+
+.kitlast-planner__toolbar {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.kitlast-planner__button {
+    border: 1px solid rgba(0, 106, 78, 0.2);
+    background: rgba(0, 106, 78, 0.05);
+    color: var(--brand);
+    border-radius: 12px;
+    padding: 8px 16px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    transition: background 0.18s ease, border-color 0.18s ease;
+}
+
+.kitlast-planner__button--empty {
+    color: rgba(44, 44, 44, 0.45);
+    background: rgba(44, 44, 44, 0.08);
+    border-color: rgba(44, 44, 44, 0.15);
+}
+
+.kitlast-planner__button--active {
+    background: var(--brand);
+    color: #fff;
+    border-color: var(--brand);
+}
+
+.kitlast-planner__button:hover,
+.kitlast-planner__button:focus {
+    border-color: var(--brand-600);
+    background: rgba(0, 106, 78, 0.12);
+}
+
+.kitlast-planner__body {
+    display: grid;
+    grid-template-columns: 80px 1fr;
+    gap: 12px;
+}
+
+.kitlast-planner__hours {
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+    font-size: 0.82rem;
+    color: var(--muted);
+}
+
+.kitlast-planner__hours span {
+    height: 60px;
+}
+
+.kitlast-planner__columns {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    gap: 8px;
+}
+
+.kitlast-planner__column {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.kitlast-planner__column-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    font-size: 0.85rem;
+    color: var(--muted);
+    padding: 0 4px;
+}
+
+.kitlast-planner__column-day {
+    font-family: 'Poppins', sans-serif;
+    font-weight: 600;
+    color: var(--text);
+}
+
+.kitlast-planner__timeline {
+    position: relative;
+    background: rgba(0, 106, 78, 0.05);
+    border-radius: 14px;
+    min-height: 720px;
+    overflow: hidden;
+}
+
+.kitlast-planner__timeline::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.04) 1px, transparent 1px);
+    background-size: 100% 60px;
+    pointer-events: none;
+}
+
+.kitlast-planner__event {
+    position: absolute;
+    left: 6px;
+    right: 6px;
+    border-radius: 10px;
+    color: #fff;
+    padding: 8px 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    box-shadow: 0 10px 20px rgba(17, 53, 44, 0.18);
+}
+
+.kitlast-planner__event-time {
+    font-size: 0.72rem;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.kitlast-planner__event-title {
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+@media (max-width: 1024px) {
+    .kitlast-planner__body {
+        grid-template-columns: 60px 1fr;
+    }
+
+    .kitlast-planner__columns {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .kitlast-planner__header {
+        align-items: flex-start;
+    }
+}
+
+@media (max-width: 720px) {
+    .kitlast-planner__columns {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .kitlast-planner__hours {
+        font-size: 0.75rem;
+        gap: 48px;
+    }
 }
 
 @media (max-width: 640px) {
