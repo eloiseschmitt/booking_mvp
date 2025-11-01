@@ -1,3 +1,5 @@
+"""User model and manager definitions."""
+
 from django.contrib.auth.base_user import AbstractBaseUser, BaseUserManager
 from django.contrib.auth.models import PermissionsMixin
 from django.db import models
@@ -5,9 +7,12 @@ from django.utils import timezone
 
 
 class UserManager(BaseUserManager):
+    """Custom manager to support email-based authentication."""
+
     use_in_migrations = True
 
     def _create_user(self, email, password, **extra_fields):
+        """Create and persist a user with the given credentials."""
         if not email:
             raise ValueError("Email must be set")
         email = self.normalize_email(email)
@@ -17,18 +22,25 @@ class UserManager(BaseUserManager):
         return user
 
     def create_user(self, email, password=None, **extra_fields):
+        """Create a standard user."""
         extra_fields.setdefault("is_staff", False)
         extra_fields.setdefault("is_superuser", False)
         return self._create_user(email, password, **extra_fields)
 
     def create_superuser(self, email, password=None, **extra_fields):
+        """Create an administrative superuser."""
         extra_fields.setdefault("is_staff", True)
         extra_fields.setdefault("is_superuser", True)
         return self._create_user(email, password, **extra_fields)
 
 
 class User(AbstractBaseUser, PermissionsMixin):
+    """Application user based on email as the primary identifier."""
+
+    # pylint: disable=too-many-ancestors
     class UserType(models.TextChoices):
+        """User types available in the system."""
+
         PROFESSIONAL = "professional", "Professionnel"
         INDIVIDUAL = "individual", "Particulier"
 
@@ -47,11 +59,12 @@ class User(AbstractBaseUser, PermissionsMixin):
     objects = UserManager()
 
     USERNAME_FIELD = "email"
-    REQUIRED_FIELDS = []
+    REQUIRED_FIELDS: list[str] = []
 
-    def __str__(self):
-        return self.email
+    def __str__(self) -> str:
+        return str(self.email)
 
     @property
     def is_professional(self):
+        """Return whether the user is a professional."""
         return self.user_type == self.UserType.PROFESSIONAL

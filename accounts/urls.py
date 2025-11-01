@@ -1,4 +1,7 @@
+"""URL configuration for the accounts app."""
+
 from django.urls import path
+
 from . import views
 
 urlpatterns = [

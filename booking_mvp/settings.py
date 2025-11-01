@@ -25,7 +25,7 @@ SECRET_KEY = "django-insecure-3deazfjoz8)0@uvr$_263#bvzs%h9#!x_k%9%$=za@*55y$@q&
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS: list[str] = []
 
 
 # Application definition
@@ -56,8 +56,7 @@ ROOT_URLCONF = "booking_mvp.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [BASE_DIR / 'templates']
-        ,
+        "DIRS": [BASE_DIR / "templates"],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -131,7 +130,7 @@ LOGIN_REDIRECT_URL = "dashboard"
 LOGOUT_REDIRECT_URL = "login"
 LOGIN_URL = "login"
 
-SESSION_COOKIE_AGE = 60 * 60 * 8 # 8h
+SESSION_COOKIE_AGE = 60 * 60 * 8  # 8h
 SESSION_SAVE_EVERY_REQUEST = True
 CSRF_COOKIE_HTTPONLY = True
 

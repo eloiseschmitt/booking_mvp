@@ -1,20 +1,32 @@
+"""Database models for the accounts application."""
+
 from django.conf import settings
 from django.db import models
 
 
 class Category(models.Model):
+    """A simple grouping to organise services."""
+
+    # pylint: disable=too-few-public-methods
     name = models.CharField(max_length=100, unique=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
+        """Default ordering for categories."""
+
         ordering = ["name"]
 
     def __str__(self) -> str:
-        return self.name
+        return str(self.name)
 
 
 class Service(models.Model):
-    category = models.ForeignKey(Category, on_delete=models.CASCADE, related_name="services")
+    """A service that can be delivered as part of a workshop portfolio."""
+
+    # pylint: disable=too-few-public-methods
+    category = models.ForeignKey(
+        Category, on_delete=models.CASCADE, related_name="services"
+    )
     name = models.CharField(max_length=100)
     description = models.TextField(blank=True)
     price = models.DecimalField(max_digits=8, decimal_places=2, null=True, blank=True)
@@ -27,13 +39,18 @@ class Service(models.Model):
     )
 
     class Meta:
+        """Default ordering for services."""
+
         ordering = ["name"]
 
     def __str__(self) -> str:
-        return self.name
+        return str(self.name)
 
 
 class Workshop(models.Model):
+    """A physical workshop where services are delivered."""
+
+    # pylint: disable=too-few-public-methods
     name = models.CharField(max_length=150)
     address = models.TextField()
     zip_code = models.CharField(max_length=10)
@@ -49,7 +66,9 @@ class Workshop(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
+        """Default ordering for workshops."""
+
         ordering = ["name"]
 
     def __str__(self) -> str:
-        return self.name
+        return str(self.name)

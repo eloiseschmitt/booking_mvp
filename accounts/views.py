@@ -1,15 +1,22 @@
+"""Views for the accounts application."""
+
+# pylint: disable=no-member
+
 from django.contrib.auth import logout
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 
 from .forms import CategoryForm, ServiceForm
-from .models import Category, Service, Workshop
+from .models import Category, Workshop
 from .planning import PLANNER_HOURS, SAMPLE_WEEK
 from .services import delete_service, prepare_service_form, save_service_form
 
+
 @login_required
 def dashboard(request):
+    """Render the dashboard and handle service/category management."""
+    # pylint: disable=too-many-branches,too-many-statements
     section = request.GET.get("section", "overview")
     show_category_form = request.GET.get("show") == "category-form"
     categories = Category.objects.prefetch_related("services").all()
@@ -27,7 +34,6 @@ def dashboard(request):
         if Category.objects.filter(pk=category_for_new_service).exists():
             service_form = ServiceForm(initial={"category": category_for_new_service})
             section = "services"
-
 
     if request.method == "POST":
         action = request.POST.get("action")
@@ -55,9 +61,8 @@ def dashboard(request):
             if success:
                 redirect_url = f"{reverse('dashboard')}?section=services"
                 return redirect(redirect_url)
-            else:
-                show_service_form = True
-                service_form = form
+            show_service_form = True
+            service_form = form
         elif action == "delete_service":
             section = "services"
             service_id = request.POST.get("service_id")
@@ -83,6 +88,7 @@ def dashboard(request):
 
 @login_required
 def logout_view(request):
+    """Log the user out via POST and redirect otherwise."""
     if request.method == "POST":
         logout(request)
         return redirect("login")
@@ -90,6 +96,7 @@ def logout_view(request):
 
 
 def workshop_detail(request, pk):
+    """Display workshop details grouped by service category."""
     workshop = get_object_or_404(
         Workshop.objects.prefetch_related("services__category"), pk=pk
     )
