@@ -8,6 +8,7 @@ _TOTAL_SPAN_MINUTES = 12 * 60  # 08:00 -> 20:00
 
 def _compute_block(start_time: str, end_time: str) -> dict[str, float]:
     """Compute layout information for planning blocks."""
+
     def to_minutes(value: str) -> int:
         hour, minute = map(int, value.split(":"))
         return hour * 60 + minute
