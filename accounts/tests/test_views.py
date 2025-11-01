@@ -1,4 +1,4 @@
-"""Tests for the accounts application views and helpers."""
+"""Tests for accounts views."""
 
 # pylint: disable=missing-class-docstring,missing-function-docstring,no-member
 
@@ -9,8 +9,8 @@ from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.urls import reverse
 
-from .models import Category, Service, Workshop
-from .planning import PLANNER_HOURS, SAMPLE_WEEK
+from accounts.models import Category, Service, Workshop
+from accounts.planning import PLANNER_HOURS, SAMPLE_WEEK
 
 User = get_user_model()
 
