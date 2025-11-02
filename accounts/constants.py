@@ -37,9 +37,7 @@ FALLBACK_WEEK = (
     (
         "Mer.",
         "17/09",
-        (
-            ("09:00", "14:00", "Bloc formation interne", "Équipe interne", "#D1D7E0"),
-        ),
+        (("09:00", "14:00", "Bloc formation interne", "Équipe interne", "#D1D7E0"),),
     ),
     (
         "Jeu.",

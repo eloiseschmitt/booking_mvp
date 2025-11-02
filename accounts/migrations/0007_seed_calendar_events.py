@@ -201,7 +201,7 @@ def _parse_time(base_date, weekday: int, time_str: str):
     return timezone.make_aware(naive, timezone.get_current_timezone())
 
 
-def create_events(apps, _schema_editor):
+def create_events(apps, _schema_editor):  # pylint: disable=too-many-locals
     """Populate the planning tables with sample data."""
 
     user_model = apps.get_model("users", "User")
@@ -211,7 +211,9 @@ def create_events(apps, _schema_editor):
     event_model = apps.get_model("accounts", "Event")
     attendee_model = apps.get_model("accounts", "EventAttendee")
 
-    owner = _get_or_create_user(user_model, "planner@kitlast.test", "Planning", "Manager")
+    owner = _get_or_create_user(
+        user_model, "planner@kitlast.test", "Planning", "Manager"
+    )
 
     calendar, created = calendar_model.objects.get_or_create(
         owner=owner,

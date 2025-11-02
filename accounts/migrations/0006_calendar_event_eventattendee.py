@@ -10,6 +10,7 @@ from django.db import migrations, models
 
 class Migration(migrations.Migration):
     """Initial migration for calendar/event models."""
+
     dependencies = [
         ("accounts", "0005_alter_service_created_by_alter_workshop_city_and_more"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),

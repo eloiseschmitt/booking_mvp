@@ -10,10 +10,13 @@ from django.utils import timezone
 from .constants import (
     FALLBACK_WEEK,
     PLANNER_COLOR_PALETTE,
+    PLANNER_HOURS as _PLANNER_HOURS,
     TOTAL_PLANNER_SPAN_MINUTES,
 )
 from .event_view import EventView
 from .models import Calendar, Service
+
+PLANNER_HOURS = _PLANNER_HOURS
 
 
 def _to_minutes(value: str | datetime) -> int:
@@ -23,7 +26,9 @@ def _to_minutes(value: str | datetime) -> int:
     return hour * 60 + minute
 
 
-def _compute_block(start_time: str | datetime, end_time: str | datetime) -> dict[str, float]:
+def _compute_block(
+    start_time: str | datetime, end_time: str | datetime
+) -> dict[str, float]:
     start_minutes = _to_minutes(start_time)
     end_minutes = _to_minutes(end_time)
     top = max(start_minutes - 8 * 60, 0)
@@ -48,10 +53,18 @@ def _fallback_sample_week() -> list[dict[str, object]]:
     for label, date_label, events in FALLBACK_WEEK:
         day_events: list[dict[str, object]] = []
         for start, end, service_name, person, color in events:
-            start_dt = datetime.strptime(f"{date_label}/{base_year} {start}", "%d/%m/%Y %H:%M")
-            end_dt = datetime.strptime(f"{date_label}/{base_year} {end}", "%d/%m/%Y %H:%M")
-            start_iso = timezone.make_aware(start_dt, timezone.get_current_timezone()).isoformat()
-            end_iso = timezone.make_aware(end_dt, timezone.get_current_timezone()).isoformat()
+            start_dt = datetime.strptime(
+                f"{date_label}/{base_year} {start}", "%d/%m/%Y %H:%M"
+            )
+            end_dt = datetime.strptime(
+                f"{date_label}/{base_year} {end}", "%d/%m/%Y %H:%M"
+            )
+            start_iso = timezone.make_aware(
+                start_dt, timezone.get_current_timezone()
+            ).isoformat()
+            end_iso = timezone.make_aware(
+                end_dt, timezone.get_current_timezone()
+            ).isoformat()
             day_events.append(
                 {
                     "time": f"{start} – {end}",
@@ -72,10 +85,14 @@ def _fallback_sample_week() -> list[dict[str, object]]:
 
 
 def _empty_week() -> list[dict[str, object]]:
-    return [{"label": label, "date": date_label, "events": []} for label, date_label, _ in FALLBACK_WEEK]
+    return [
+        {"label": label, "date": date_label, "events": []}
+        for label, date_label, _ in FALLBACK_WEEK
+    ]
 
 
 def build_calendar_events(calendar: Calendar | None) -> list[dict[str, object]]:
+    # pylint: disable=too-many-locals,no-member
     """Generate planner data either from the database or fallback sample data."""
 
     if calendar is None:
@@ -86,7 +103,9 @@ def build_calendar_events(calendar: Calendar | None) -> list[dict[str, object]]:
     titles = {event.title for event in queryset}
     service_lookup = {
         service.name: service
-        for service in Service.objects.filter(name__in=titles).select_related("category")
+        for service in Service.objects.filter(name__in=titles).select_related(
+            "category"
+        )
     }
 
     for index, event in enumerate(queryset):
@@ -98,7 +117,11 @@ def build_calendar_events(calendar: Calendar | None) -> list[dict[str, object]]:
 
         service_model = service_lookup.get(event.title)
         service_name = service_model.name if service_model else event.title
-        category_name = service_model.category.name if service_model and service_model.category else ""
+        category_name = (
+            service_model.category.name
+            if service_model and service_model.category
+            else ""
+        )
 
         author = ""
         if event.created_by:
@@ -106,7 +129,10 @@ def build_calendar_events(calendar: Calendar | None) -> list[dict[str, object]]:
                 getattr(event.created_by, "first_name", "") or "",
                 getattr(event.created_by, "last_name", "") or "",
             ]
-            author = " ".join(part for part in author_parts if part).strip() or event.created_by.email
+            author = (
+                " ".join(part for part in author_parts if part).strip()
+                or event.created_by.email
+            )
 
         display_title = f"{author} · {service_name}" if author else service_name
 

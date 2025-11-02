@@ -9,8 +9,8 @@ from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.urls import reverse
 
+from accounts.constants import PLANNER_HOURS
 from accounts.models import Category, Service, Workshop
-from accounts.planning import PLANNER_HOURS
 
 User = get_user_model()
 
