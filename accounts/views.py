@@ -8,8 +8,8 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 
 from .forms import CategoryForm, ServiceForm
-from .models import Category, Workshop
-from .planning import PLANNER_HOURS, SAMPLE_WEEK
+from .models import Calendar, Category, Workshop
+from .planning import PLANNER_HOURS, build_calendar_events
 from .services import delete_service, prepare_service_form, save_service_form
 
 
@@ -73,6 +73,12 @@ def dashboard(request):
         else:
             section = "overview"
 
+    calendar = None
+    if request.user.is_authenticated:
+        calendar = Calendar.objects.filter(owner=request.user).first()
+        if calendar is None:
+            calendar = Calendar.objects.filter(is_public=True).first()
+
     context = {
         "section": section,
         "categories": categories,
@@ -81,7 +87,7 @@ def dashboard(request):
         "service_form": service_form,
         "show_service_form": show_service_form,
         "planner_hours": PLANNER_HOURS,
-        "planning_days": SAMPLE_WEEK,
+        "planning_days": build_calendar_events(calendar),
     }
     return render(request, "accounts/dashboard.html", context)
 

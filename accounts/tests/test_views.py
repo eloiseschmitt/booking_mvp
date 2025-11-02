@@ -10,7 +10,7 @@ from django.test import TestCase
 from django.urls import reverse
 
 from accounts.models import Category, Service, Workshop
-from accounts.planning import PLANNER_HOURS, SAMPLE_WEEK
+from accounts.planning import PLANNER_HOURS
 
 User = get_user_model()
 
@@ -53,7 +53,13 @@ class DashboardViewTests(TestCase):
         self.assertFalse(response.context["show_category_form"])
         self.assertFalse(response.context["show_service_form"])
         self.assertEqual(response.context["planner_hours"], PLANNER_HOURS)
-        self.assertEqual(response.context["planning_days"], SAMPLE_WEEK)
+        planning_days = response.context["planning_days"]
+        self.assertIsInstance(planning_days, list)
+        self.assertGreaterEqual(len(planning_days), 1)
+        first_day = planning_days[0]
+        self.assertIn("label", first_day)
+        self.assertIn("date", first_day)
+        self.assertIn("events", first_day)
 
     def test_dashboard_get_with_service_id_prefills_form(self):
         self.login()
