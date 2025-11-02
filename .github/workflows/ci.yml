@@ -48,9 +48,8 @@ jobs:
           args: >
             -X
             -Dsonar.organization=${{ secrets.SONAR_ORGANIZATION }}
-            -Dsonar.scanner.featureFlags.enable=false
+            -Dsonar.projectKey=${{ secrets.SONAR_PROJECT_KEY }}
         env:
           SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-          SONAR_SCANNER_OPTS: "-Dsonar.scanner.featureFlags.enable=false"
           SONAR_SCANNER_VERSION: "4.8.0.2856"
