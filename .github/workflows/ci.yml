@@ -46,6 +46,7 @@ jobs:
         uses: SonarSource/sonarqube-scan-action@v2
         with:
           args: >
+            -X
             -Dsonar.organization=${{ secrets.SONAR_ORGANIZATION }}
         env:
           SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
