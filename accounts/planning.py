@@ -8,21 +8,8 @@ from typing import NamedTuple, Sequence
 
 from django.utils import timezone
 
+from .constants import PLANNER_COLOR_PALETTE, PLANNER_HOURS, TOTAL_PLANNER_SPAN_MINUTES
 from .models import Calendar, Event
-
-PLANNER_HOURS = [f"{hour:02d}:00" for hour in range(8, 21)]
-_TOTAL_SPAN_MINUTES = 12 * 60  # 08:00 -> 20:00
-_COLOR_PALETTE: Sequence[str] = (
-    "#7C8FF8",
-    "#E07B39",
-    "#6BC0A5",
-    "#AF77E5",
-    "#2CB7C6",
-    "#F06FA7",
-    "#4AC07A",
-    "#5272FF",
-    "#FFB347",
-)
 
 
 class _EventView(NamedTuple):
@@ -48,8 +35,8 @@ def _compute_block(start_time: str | datetime, end_time: str | datetime) -> dict
     top = max(start_minutes - 8 * 60, 0)
     duration = max(end_minutes - start_minutes, 30)
     return {
-        "top_pct": (top / _TOTAL_SPAN_MINUTES) * 100,
-        "height_pct": (duration / _TOTAL_SPAN_MINUTES) * 100,
+        "top_pct": (top / TOTAL_PLANNER_SPAN_MINUTES) * 100,
+        "height_pct": (duration / TOTAL_PLANNER_SPAN_MINUTES) * 100,
     }
 
 
@@ -222,7 +209,7 @@ def build_calendar_events(calendar: Calendar | None) -> list[dict[str, object]]:
         end_local = timezone.localtime(event.end_at)
         label = _weekday_label(start_local)
         date_label = start_local.strftime("%d/%m")
-        color = _COLOR_PALETTE[index % len(_COLOR_PALETTE)]
+        color = PLANNER_COLOR_PALETTE[index % len(PLANNER_COLOR_PALETTE)]
         display_title = event.title
         if event.created_by:
             author_parts = [getattr(event.created_by, "first_name", ""), getattr(event.created_by, "last_name", "")]
