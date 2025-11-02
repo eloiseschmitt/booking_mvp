@@ -13,4 +13,3 @@ PLANNER_COLOR_PALETTE = (
     "#5272FF",
     "#FFB347",
 )
-

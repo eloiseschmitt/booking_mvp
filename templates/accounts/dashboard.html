@@ -164,6 +164,18 @@
                   <div class="kitlast-planner__timeline">
                     {% for event in day.events %}
                     <div class="kitlast-planner__event"
+                      data-planner-event
+                      data-event-label="{{ day.label }}"
+                      data-event-date="{{ day.date }}"
+                      data-event-time="{{ event.time }}"
+                      data-event-title="{{ event.title|escape }}"
+                      data-event-service="{{ event.service|default_if_none:''|escape }}"
+                      data-event-category="{{ event.category|default_if_none:''|escape }}"
+                      data-event-description="{{ event.description|default_if_none:''|escape }}"
+                      data-event-status="{{ event.status|escape }}"
+                      data-event-created-by="{{ event.created_by|default_if_none:''|escape }}"
+                      data-event-start="{{ event.start }}"
+                      data-event-end="{{ event.end }}"
                       style="top: {{ event.top_pct }}%; height: {{ event.height_pct }}%; background-color: {{ event.color }};">
                       <span class="kitlast-planner__event-time">{{ event.time }}</span>
                       <span class="kitlast-planner__event-title">{{ event.title }}</span>
@@ -188,6 +200,49 @@
       </div>
     </div>
   </section>
+</div>
+<div class="kitlast-modal" data-event-modal hidden>
+  <div class="kitlast-modal__overlay" data-modal-close></div>
+  <div class="kitlast-modal__content" role="dialog" aria-modal="true" aria-labelledby="event-modal-title">
+    <header class="kitlast-modal__header">
+      <h2 id="event-modal-title">Détail du rendez-vous</h2>
+      <button type="button" class="kitlast-modal__close" data-modal-close aria-label="Fermer la fenêtre">×</button>
+    </header>
+    <div class="kitlast-modal__body kitlast-event-modal__body">
+      <div class="kitlast-event-modal__row">
+        <span class="kitlast-event-modal__label">Date</span>
+        <span class="kitlast-event-modal__value" data-event-field="date">—</span>
+      </div>
+      <div class="kitlast-event-modal__row">
+        <span class="kitlast-event-modal__label">Horaire</span>
+        <span class="kitlast-event-modal__value" data-event-field="time">—</span>
+      </div>
+      <div class="kitlast-event-modal__row">
+        <span class="kitlast-event-modal__label">Titre</span>
+        <span class="kitlast-event-modal__value" data-event-field="title">—</span>
+      </div>
+      <div class="kitlast-event-modal__row">
+        <span class="kitlast-event-modal__label">Prestation</span>
+        <span class="kitlast-event-modal__value" data-event-field="service">—</span>
+      </div>
+      <div class="kitlast-event-modal__row">
+        <span class="kitlast-event-modal__label">Catégorie</span>
+        <span class="kitlast-event-modal__value" data-event-field="category">—</span>
+      </div>
+      <div class="kitlast-event-modal__row">
+        <span class="kitlast-event-modal__label">Statut</span>
+        <span class="kitlast-event-modal__value" data-event-field="status">—</span>
+      </div>
+      <div class="kitlast-event-modal__row">
+        <span class="kitlast-event-modal__label">Créé par</span>
+        <span class="kitlast-event-modal__value" data-event-field="created_by">—</span>
+      </div>
+      <div class="kitlast-event-modal__row kitlast-event-modal__row--description">
+        <span class="kitlast-event-modal__label">Description</span>
+        <span class="kitlast-event-modal__value" data-event-field="description">—</span>
+      </div>
+    </div>
+  </div>
 </div>
 <div class="kitlast-modal" data-category-modal {% if not show_category_form and not category_form.errors %}hidden{%endif %}>
   <div class="kitlast-modal__overlay" data-modal-close></div>
@@ -295,8 +350,21 @@
     const navLinks = document.querySelectorAll('[data-section-target]');
     const categoryModal = document.querySelector('[data-category-modal]');
     const serviceModal = document.querySelector('[data-service-modal]');
+    const eventModal = document.querySelector('[data-event-modal]');
     const categoryFormField = categoryModal ? categoryModal.querySelector('input[type="text"]') : null;
     const serviceNameField = serviceModal ? serviceModal.querySelector('input[name="name"]') : null;
+    const eventFieldMap = eventModal
+      ? {
+          date: eventModal.querySelector('[data-event-field="date"]'),
+          time: eventModal.querySelector('[data-event-field="time"]'),
+          title: eventModal.querySelector('[data-event-field="title"]'),
+          service: eventModal.querySelector('[data-event-field="service"]'),
+          category: eventModal.querySelector('[data-event-field="category"]'),
+          status: eventModal.querySelector('[data-event-field="status"]'),
+          created_by: eventModal.querySelector('[data-event-field="created_by"]'),
+          description: eventModal.querySelector('[data-event-field="description"]'),
+        }
+      : null;
     const plannerColumnsContainer = document.querySelector('.kitlast-planner__columns');
     const plannerColumns = plannerColumnsContainer ? Array.from(plannerColumnsContainer.querySelectorAll('[data-planner-column]')) : [];
     const plannerButtons = document.querySelectorAll('[data-planner-action]');
@@ -337,6 +405,7 @@
       } else if (sectionName !== 'services') {
         closeModal(categoryModal);
         closeModal(serviceModal);
+        closeModal(eventModal);
       }
       syncUrl();
     }
@@ -377,6 +446,7 @@
 
     const categoryModalHandlers = attachModalHandlers(categoryModal, categoryFormField);
     const serviceModalHandlers = attachModalHandlers(serviceModal, serviceNameField);
+    const eventModalHandlers = attachModalHandlers(eventModal);
 
     if (toggle && subnav) {
       toggle.addEventListener('click', () => {
@@ -406,7 +476,23 @@
       if (serviceModal && !serviceModal.hasAttribute('hidden')) {
         closeModal(serviceModal);
       }
+      if (eventModal && !eventModal.hasAttribute('hidden')) {
+        closeModal(eventModal);
+      }
     });
+
+    function fillEventModal(data) {
+      if (!eventFieldMap) return;
+      const fallback = '—';
+      eventFieldMap.date.textContent = data.date || fallback;
+      eventFieldMap.time.textContent = data.time || fallback;
+      eventFieldMap.title.textContent = data.title || fallback;
+      eventFieldMap.service.textContent = data.service || fallback;
+      eventFieldMap.category.textContent = data.category || fallback;
+      eventFieldMap.status.textContent = data.status || fallback;
+      eventFieldMap.created_by.textContent = data.created_by || fallback;
+      eventFieldMap.description.textContent = data.description || fallback;
+    }
 
     function updatePlannerButtons(view) {
       plannerButtons.forEach((button) => {
@@ -488,6 +574,29 @@
     });
 
     showWeekView();
+
+    if (plannerColumnsContainer && eventModalHandlers) {
+      plannerColumnsContainer.addEventListener('click', (evt) => {
+        const card = evt.target.closest('[data-planner-event]');
+        if (!card) {
+          return;
+        }
+        fillEventModal({
+          label: card.dataset.eventLabel,
+          date: card.dataset.eventDate,
+          time: card.dataset.eventTime,
+          title: card.dataset.eventTitle,
+          service: card.dataset.eventService,
+          category: card.dataset.eventCategory,
+          description: card.dataset.eventDescription,
+          status: card.dataset.eventStatus,
+          created_by: card.dataset.eventCreatedBy,
+          start: card.dataset.eventStart,
+          end: card.dataset.eventEnd,
+        });
+        eventModalHandlers.open();
+      });
+    }
 
     if (sectionContainer) {
       const active = sectionContainer.dataset.activeSection;

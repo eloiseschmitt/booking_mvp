@@ -266,6 +266,39 @@
     gap: 16px;
 }
 
+.kitlast-event-modal__body {
+    display: grid;
+    gap: 16px;
+}
+
+.kitlast-event-modal__row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 16px;
+    font-size: 0.95rem;
+}
+
+.kitlast-event-modal__row--description {
+    flex-direction: column;
+}
+
+.kitlast-event-modal__label {
+    font-weight: 600;
+    color: var(--muted);
+}
+
+.kitlast-event-modal__value {
+    color: var(--text);
+    text-align: right;
+    flex: 1;
+}
+
+.kitlast-event-modal__row--description .kitlast-event-modal__value {
+    text-align: left;
+    white-space: pre-wrap;
+}
+
 .kitlast-modal__form {
     width: 100%;
     display: flex;

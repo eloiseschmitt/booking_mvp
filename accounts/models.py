@@ -73,10 +73,10 @@ class Workshop(models.Model):
     def __str__(self) -> str:
         return str(self.name)
 
+
 class Calendar(models.Model):
-    """
-    Personal calendar posseded by one owner.
-    """
+    """Personal agenda owned by a single user."""
+
     owner = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
@@ -92,15 +92,16 @@ class Calendar(models.Model):
     class Meta:
         unique_together = ("owner", "slug")
         ordering = ["owner__id", "name"]
+        verbose_name = "calendar"
+        verbose_name_plural = "calendars"
 
     def __str__(self):
         return f"{self.name} ({self.owner})"
 
 
 class Event(models.Model):
-    """
-    Event linked to a calendar.
-    """
+    """Single calendar entry scheduled for a time range."""
+
     calendar = models.ForeignKey(
         Calendar,
         on_delete=models.CASCADE,
@@ -135,11 +136,16 @@ class Event(models.Model):
 
     class Meta:
         ordering = ["start_at"]
+        verbose_name = "event"
+        verbose_name_plural = "events"
 
     def __str__(self):
         return f"{self.title} – {self.start_at} → {self.end_at}"
-    
+
+
 class EventAttendee(models.Model):
+    """Association between an event and a participant."""
+
     event = models.ForeignKey(
         Event,
         on_delete=models.CASCADE,
@@ -159,3 +165,5 @@ class EventAttendee(models.Model):
 
     class Meta:
         unique_together = ("event", "user")
+        verbose_name = "event attendee"
+        verbose_name_plural = "event attendees"

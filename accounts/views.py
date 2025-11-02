@@ -16,7 +16,7 @@ from .services import delete_service, prepare_service_form, save_service_form
 @login_required
 def dashboard(request):
     """Render the dashboard and handle service/category management."""
-    # pylint: disable=too-many-branches,too-many-statements
+    # pylint: disable=too-many-branches,too-many-statements,too-many-locals
     section = request.GET.get("section", "overview")
     show_category_form = request.GET.get("show") == "category-form"
     categories = Category.objects.prefetch_related("services").all()
