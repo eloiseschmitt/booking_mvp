@@ -92,6 +92,8 @@ class Calendar(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
+        """Meta options for Calendar model."""
+
         unique_together = ("owner", "slug")
         ordering = ["owner__id", "name"]
         verbose_name = "calendar"
@@ -139,6 +141,8 @@ class Event(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
+        """Meta options for Event model."""
+
         ordering = ["start_at"]
         verbose_name = "event"
         verbose_name_plural = "events"
@@ -170,6 +174,8 @@ class EventAttendee(models.Model):
     is_confirmed = models.BooleanField(default=False)
 
     class Meta:
+        """Meta options for EventAttendee model."""
+
         unique_together = ("event", "user")
         verbose_name = "event attendee"
         verbose_name_plural = "event attendees"
