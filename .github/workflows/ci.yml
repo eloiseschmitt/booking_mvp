@@ -7,6 +7,7 @@ on:
   pull_request:
     branches:
       - main
+    types: [opened, synchronize, reopened]
 
 jobs:
   lint-and-static-analysis:
@@ -41,15 +42,15 @@ jobs:
           DJANGO_SETTINGS_MODULE: booking_mvp.settings
         run: pylint accounts booking_mvp users
 
-      - name: SonarQube Scan
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        uses: SonarSource/sonarqube-scan-action@v2
+  sonarqube:
+    name: SonarQube
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
         with:
-          args: >
-            -X
-            -Dsonar.organization=${{ secrets.SONAR_ORGANIZATION }}
-            -Dsonar.projectKey=${{ secrets.SONAR_PROJECT_KEY }}
+          fetch-depth: 0
+      - name: SonarQube Scan
+        uses: SonarSource/sonarqube-scan-action@v6
         env:
-          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-          SONAR_SCANNER_VERSION: "4.8.0.2856"
+    
