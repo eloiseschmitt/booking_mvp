@@ -72,3 +72,90 @@ class Workshop(models.Model):
 
     def __str__(self) -> str:
         return str(self.name)
+
+class Calendar(models.Model):
+    """
+    Personal calendar posseded by one owner.
+    """
+    owner = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="calendars",
+    )
+    name = models.CharField(max_length=150)
+    slug = models.SlugField(unique=True)
+
+    is_public = models.BooleanField(default=False)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ("owner", "slug")
+        ordering = ["owner__id", "name"]
+
+    def __str__(self):
+        return f"{self.name} ({self.owner})"
+
+
+class Event(models.Model):
+    """
+    Event linked to a calendar.
+    """
+    calendar = models.ForeignKey(
+        Calendar,
+        on_delete=models.CASCADE,
+        related_name="events",
+    )
+
+    title = models.CharField(max_length=200)
+    description = models.TextField(blank=True)
+
+    start_at = models.DateTimeField()
+    end_at = models.DateTimeField()
+
+    status = models.CharField(
+        max_length=30,
+        choices=(
+            ("planned", "Planned"),
+            ("confirmed", "Confirmed"),
+            ("canceled", "Canceled"),
+        ),
+        default="planned",
+    )
+
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name="created_events",
+    )
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["start_at"]
+
+    def __str__(self):
+        return f"{self.title} – {self.start_at} → {self.end_at}"
+    
+class EventAttendee(models.Model):
+    event = models.ForeignKey(
+        Event,
+        on_delete=models.CASCADE,
+        related_name="attendees",
+    )
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    role = models.CharField(
+        max_length=30,
+        choices=(
+            ("owner", "Owner"),
+            ("required", "Required"),
+            ("optional", "Optional"),
+        ),
+        default="required",
+    )
+    is_confirmed = models.BooleanField(default=False)
+
+    class Meta:
+        unique_together = ("event", "user")
