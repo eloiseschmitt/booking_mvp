@@ -92,7 +92,6 @@ def _empty_week() -> list[dict[str, object]]:
 
 
 def build_calendar_events(calendar: Calendar | None) -> list[dict[str, object]]:
-    # pylint: disable=too-many-locals,no-member
     """Generate planner data either from the database or fallback sample data."""
 
     if calendar is None:

@@ -36,7 +36,6 @@ class BuildCalendarEventsTests(TestCase):
     def test_empty_calendar_returns_empty_week(self):
         """Ensure build_calendar_events returns seven empty days when no events."""
 
-        # pylint: disable=no-member
         calendar = Calendar.objects.create(
             owner=self.user,
             name="Empty calendar",

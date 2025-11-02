@@ -76,6 +76,7 @@ class Workshop(models.Model):
 
 class Calendar(models.Model):
     """Personal agenda owned by a single user."""
+
     # pylint: disable=too-few-public-methods
 
     owner = models.ForeignKey(
@@ -102,6 +103,7 @@ class Calendar(models.Model):
 
 class Event(models.Model):
     """Single calendar entry scheduled for a time range."""
+
     # pylint: disable=too-few-public-methods
 
     calendar = models.ForeignKey(
@@ -147,6 +149,7 @@ class Event(models.Model):
 
 class EventAttendee(models.Model):
     """Association between an event and a participant."""
+
     # pylint: disable=too-few-public-methods
 
     event = models.ForeignKey(

@@ -201,7 +201,7 @@ def _parse_time(base_date, weekday: int, time_str: str):
     return timezone.make_aware(naive, timezone.get_current_timezone())
 
 
-def create_events(apps, _schema_editor):  # pylint: disable=too-many-locals
+def create_events(apps, _schema_editor):
     """Populate the planning tables with sample data."""
 
     user_model = apps.get_model("users", "User")

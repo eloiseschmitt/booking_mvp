@@ -1,7 +1,5 @@
 """Views for the accounts application."""
 
-# pylint: disable=no-member
-
 from django.contrib.auth import logout
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404, redirect, render
