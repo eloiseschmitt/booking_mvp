@@ -42,6 +42,7 @@ jobs:
         run: pylint accounts booking_mvp users
 
       - name: SonarQube Scan
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         uses: SonarSource/sonarqube-scan-action@v2
         with:
           args: >
