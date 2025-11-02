@@ -10,7 +10,6 @@ from django.utils import timezone
 from .constants import (
     FALLBACK_WEEK,
     PLANNER_COLOR_PALETTE,
-    PLANNER_HOURS,
     TOTAL_PLANNER_SPAN_MINUTES,
 )
 from .event_view import EventView
