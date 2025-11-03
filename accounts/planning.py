@@ -91,84 +91,102 @@ def _empty_week() -> list[dict[str, object]]:
     ]
 
 
+def _build_service_lookup(events: list) -> dict[str, Service]:
+    """Return a mapping from event titles to Service instances."""
+
+    titles = {event.title for event in events}
+    if not titles:
+        return {}
+    return {
+        service.name: service
+        for service in Service.objects.filter(name__in=titles).select_related("category")
+    }
+
+
+def _resolve_author(user) -> str:
+    """Return the display name for the creator of an event."""
+
+    if user is None:
+        return ""
+    author_parts = [
+        getattr(user, "first_name", "") or "",
+        getattr(user, "last_name", "") or "",
+    ]
+    author = " ".join(part for part in author_parts if part).strip()
+    return author or getattr(user, "email", "")
+
+
+def _event_colour(index: int) -> str:
+    return PLANNER_COLOR_PALETTE[index % len(PLANNER_COLOR_PALETTE)]
+
+
+def _build_event_view(event, index: int, service_lookup: dict[str, Service]) -> EventView:
+    """Convert a database event into the EventView structure expected by the UI."""
+
+    start_local = timezone.localtime(event.start_at)
+    end_local = timezone.localtime(event.end_at)
+    label = _weekday_label(start_local)
+    date_label = start_local.strftime("%d/%m")
+    service_model = service_lookup.get(event.title)
+    service_name = service_model.name if service_model else event.title
+    category_name = (
+        service_model.category.name if service_model and service_model.category else ""
+    )
+    author = _resolve_author(event.created_by)
+    display_title = f"{author} · {service_name}" if author else service_name
+
+    return EventView(
+        label=label,
+        date=date_label,
+        time=_format_time_range(start_local, end_local),
+        title=display_title,
+        color=_event_colour(index),
+        service=service_name,
+        category=category_name,
+        description=event.description or "",
+        status=event.get_status_display(),
+        created_by=author,
+        start=start_local.isoformat(),
+        end=end_local.isoformat(),
+        **_compute_block(start_local, end_local),
+    )
+
+
+def _group_event_views(event_views: list[EventView]) -> list[dict[str, object]]:
+    """Group event views by day for easier template consumption."""
+
+    grouped: dict[tuple[str, str], list[EventView]] = defaultdict(list)
+    for view in sorted(event_views, key=lambda item: item.start):
+        grouped[(view.label, view.date)].append(view)
+
+    ordered_groups = sorted(grouped.items(), key=lambda item: item[1][0].start)
+    return [
+        {
+            "label": label,
+            "date": date,
+            "events": [view._asdict() for view in views],
+        }
+        for (label, date), views in ordered_groups
+    ]
+
+
 def build_calendar_events(calendar: Calendar | None) -> list[dict[str, object]]:
     """Generate planner data either from the database or fallback sample data."""
 
     if calendar is None:
         return SAMPLE_WEEK
 
-    events_by_day: dict[tuple[str, str], list[EventView]] = defaultdict(list)
     queryset = list(calendar.events.select_related("created_by").order_by("start_at"))
-    titles = {event.title for event in queryset}
-    service_lookup = {
-        service.name: service
-        for service in Service.objects.filter(name__in=titles).select_related(
-            "category"
-        )
-    }
-
-    for index, event in enumerate(queryset):
-        start_local = timezone.localtime(event.start_at)
-        end_local = timezone.localtime(event.end_at)
-        label = _weekday_label(start_local)
-        date_label = start_local.strftime("%d/%m")
-        color = PLANNER_COLOR_PALETTE[index % len(PLANNER_COLOR_PALETTE)]
-
-        service_model = service_lookup.get(event.title)
-        service_name = service_model.name if service_model else event.title
-        category_name = (
-            service_model.category.name
-            if service_model and service_model.category
-            else ""
-        )
-
-        author = ""
-        if event.created_by:
-            author_parts = [
-                getattr(event.created_by, "first_name", "") or "",
-                getattr(event.created_by, "last_name", "") or "",
-            ]
-            author = (
-                " ".join(part for part in author_parts if part).strip()
-                or event.created_by.email
-            )
-
-        display_title = f"{author} · {service_name}" if author else service_name
-
-        events_by_day[label, date_label].append(
-            EventView(
-                label=label,
-                date=date_label,
-                time=_format_time_range(start_local, end_local),
-                title=display_title,
-                color=color,
-                service=service_name,
-                category=category_name,
-                description=event.description or "",
-                status=event.get_status_display(),
-                created_by=author,
-                start=start_local.isoformat(),
-                end=end_local.isoformat(),
-                **_compute_block(start_local, end_local),
-            )
-        )
-
-    if not events_by_day:
+    if not queryset:
         return _empty_week()
 
-    grouped: list[dict[str, object]] = []
-    for (label, date_label), events in sorted(
-        events_by_day.items(), key=lambda item: datetime.strptime(item[0][1], "%d/%m")
-    ):
-        grouped.append(
-            {
-                "label": label,
-                "date": date_label,
-                "events": [event._asdict() for event in events],
-            }
-        )
+    service_lookup = _build_service_lookup(queryset)
+    event_views = [
+        _build_event_view(event, index, service_lookup)
+        for index, event in enumerate(queryset)
+    ]
 
-    return grouped
+    return _group_event_views(event_views)
 
 
 SAMPLE_WEEK = _fallback_sample_week()

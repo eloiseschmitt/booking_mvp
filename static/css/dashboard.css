@@ -299,6 +299,24 @@
     white-space: pre-wrap;
 }
 
+.kitlast-event-modal__actions {
+    display: flex;
+    justify-content: flex-end;
+}
+
+.kitlast-button--danger {
+    background: #dc3545;
+    border: 1px solid #dc3545;
+    color: #fff;
+}
+
+.kitlast-button--danger:hover,
+.kitlast-button--danger:focus {
+    background: #b02a37;
+    border-color: #b02a37;
+    color: #fff;
+}
+
 .kitlast-modal__form {
     width: 100%;
     display: flex;

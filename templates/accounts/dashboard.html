@@ -241,6 +241,11 @@
         <span class="kitlast-event-modal__label">Description</span>
         <span class="kitlast-event-modal__value" data-event-field="description">—</span>
       </div>
+      <div class="kitlast-event-modal__actions">
+        <button type="button" class="kitlast-button kitlast-button--danger" data-event-delete>
+          Supprimer
+        </button>
+      </div>
     </div>
   </div>
 </div>
@@ -363,6 +368,7 @@
           status: eventModal.querySelector('[data-event-field="status"]'),
           created_by: eventModal.querySelector('[data-event-field="created_by"]'),
           description: eventModal.querySelector('[data-event-field="description"]'),
+          deleteButton: eventModal.querySelector('[data-event-delete]'),
         }
       : null;
     const plannerColumnsContainer = document.querySelector('.kitlast-planner__columns');
@@ -492,6 +498,14 @@
       eventFieldMap.status.textContent = data.status || fallback;
       eventFieldMap.created_by.textContent = data.created_by || fallback;
       eventFieldMap.description.textContent = data.description || fallback;
+      if (eventFieldMap.deleteButton) {
+        const start = data.start || '';
+        const end = data.end || '';
+        eventFieldMap.deleteButton.dataset.eventStart = start;
+        eventFieldMap.deleteButton.dataset.eventEnd = end;
+        const ariaLabel = data.title ? `Supprimer ${data.title}` : 'Supprimer le rendez-vous';
+        eventFieldMap.deleteButton.setAttribute('aria-label', ariaLabel);
+      }
     }
 
     function updatePlannerButtons(view) {
