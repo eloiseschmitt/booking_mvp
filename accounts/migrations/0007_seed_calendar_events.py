@@ -5,6 +5,7 @@
 from __future__ import annotations
 
 from datetime import datetime, timedelta
+from secrets import token_urlsafe
 
 from django.contrib.auth.hashers import make_password
 from django.db import migrations
@@ -190,7 +191,7 @@ def _get_or_create_user(user_model, email: str, first_name: str, last_name: str)
             user.save(update_fields=update_fields)
         return user
 
-    password_hash = make_password("kitlast123")
+    password_hash = make_password(token_urlsafe(16))
     return user_model.objects.create(password=password_hash, email=email, **defaults)
 
 
