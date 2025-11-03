@@ -8,6 +8,7 @@ from django.db import migrations
 
 class Migration(migrations.Migration):
     """Migration for adjusting planner model metadata."""
+
     dependencies = [
         ("accounts", "0007_seed_calendar_events"),
     ]
