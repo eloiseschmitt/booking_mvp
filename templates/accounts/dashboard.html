@@ -2,8 +2,13 @@
 {% load static %}
 {% block title %}Dashboard{% endblock %}
 {% block head %}
-  {{ block.super }}
-  <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+{{ block.super }}
+<link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+{% endblock %}
+
+{% block scripts %}
+{{ block.super }}
+<script src="{% static 'js/dashboard.js' %}"></script>
 {% endblock %}
 {% block content %}
 <div class="kitlast-dashboard-layout">
@@ -19,7 +24,7 @@
           <button type="button" class="kitlast-dashboard-sidebar__toggle" data-section-target="services"
             aria-expanded="{% if section == 'services' %}true{% else %}false{% endif %}"
             aria-controls="services-subnav">Gestion des prestations</button>
-          <ul id="services-subnav" class="kitlast-dashboard-sidebar__subnav" {% if section != 'services' %}hidden{% endif%}>
+          <ul id="services-subnav" class="kitlast-dashboard-sidebar__subnav" {% if section != 'services' %} hidden{% endif %}>
             <li><a href="{% url 'dashboard' %}?section=services&show=category-form" data-action="show-category-form"
                 data-modal-instant="true">Ajouter une catégorie</a></li>
             <li><a href="{% url 'dashboard' %}?section=services&show=service-form" data-action="show-service-form"
@@ -42,7 +47,9 @@
         </form>
       </div>
 
-      <div class="kitlast-dashboard-content" data-active-section="{{ section }}">
+      <div class="kitlast-dashboard-content" data-active-section="{{ section }}"
+        data-show-category="{{ show_category_form|yesno:'true,false' }}"
+        data-show-service="{{ show_service_form|yesno:'true,false' }}">
         <section class="kitlast-content-section{% if section == 'overview' %} is-active{% endif %}"
           data-section="overview">
           <div class="kitlast-card kitlast-welcome-card">
@@ -135,7 +142,8 @@
     </div>
   </div>
 </div>
-<div class="kitlast-modal" data-category-modal {% if not show_category_form and not category_form.errors %}hidden{%endif %}>
+<div class="kitlast-modal" data-category-modal {% if not show_category_form and not category_form.errors %}
+  hidden{%endif %}>
   <div class="kitlast-modal__overlay" data-modal-close></div>
   <div class="kitlast-modal__content" role="dialog" aria-modal="true" aria-labelledby="category-modal-title">
     <header class="kitlast-modal__header">
@@ -232,282 +240,5 @@
   </div>
 </div>
 
-<script>
-  (function () {
-    const toggle = document.querySelector('.kitlast-dashboard-sidebar__toggle');
-    const subnav = document.getElementById('services-subnav');
-    const sectionContainer = document.querySelector('.kitlast-dashboard-content');
-    const sections = document.querySelectorAll('.kitlast-content-section');
-    const navLinks = document.querySelectorAll('[data-section-target]');
-    const categoryModal = document.querySelector('[data-category-modal]');
-    const serviceModal = document.querySelector('[data-service-modal]');
-    const eventModal = document.querySelector('[data-event-modal]');
-    const categoryFormField = categoryModal ? categoryModal.querySelector('input[type="text"]') : null;
-    const serviceNameField = serviceModal ? serviceModal.querySelector('input[name="name"]') : null;
-    const eventFieldMap = eventModal
-      ? {
-          date: eventModal.querySelector('[data-event-field="date"]'),
-          time: eventModal.querySelector('[data-event-field="time"]'),
-          title: eventModal.querySelector('[data-event-field="title"]'),
-          service: eventModal.querySelector('[data-event-field="service"]'),
-          category: eventModal.querySelector('[data-event-field="category"]'),
-          status: eventModal.querySelector('[data-event-field="status"]'),
-          created_by: eventModal.querySelector('[data-event-field="created_by"]'),
-          description: eventModal.querySelector('[data-event-field="description"]'),
-          deleteButton: eventModal.querySelector('[data-event-delete]'),
-        }
-      : null;
-    const plannerColumnsContainer = document.querySelector('.kitlast-planner__columns');
-    const plannerColumns = plannerColumnsContainer ? Array.from(plannerColumnsContainer.querySelectorAll('[data-planner-column]')) : [];
-    const plannerButtons = document.querySelectorAll('[data-planner-action]');
 
-    let currentSection = sectionContainer ? sectionContainer.dataset.activeSection || 'overview' : 'overview';
-
-    function syncUrl() {
-      try {
-        const url = new URL(window.location);
-        url.searchParams.set('section', currentSection);
-        if (currentSection === 'services') {
-          if (categoryModal && !categoryModal.hasAttribute('hidden')) {
-            url.searchParams.set('show', 'category-form');
-          } else if (serviceModal && !serviceModal.hasAttribute('hidden')) {
-            url.searchParams.set('show', 'service-form');
-          } else {
-            url.searchParams.delete('show');
-          }
-        } else {
-          url.searchParams.delete('show');
-        }
-        window.history.replaceState(null, '', url);
-      } catch (err) {
-        /* noop */
-      }
-    }
-
-    function setActiveSection(sectionName) {
-      if (!sectionContainer) return;
-      currentSection = sectionName;
-      sectionContainer.setAttribute('data-active-section', sectionName);
-      sections.forEach((section) => {
-        section.classList.toggle('is-active', section.dataset.section === sectionName);
-      });
-      if (sectionName === 'services' && toggle && subnav) {
-        toggle.setAttribute('aria-expanded', 'true');
-        subnav.hidden = false;
-      } else if (sectionName !== 'services') {
-        closeModal(categoryModal);
-        closeModal(serviceModal);
-        closeModal(eventModal);
-      }
-      syncUrl();
-    }
-
-    function openModal(modal, focusElement) {
-      if (!modal) return;
-      modal.removeAttribute('hidden');
-      if (focusElement) {
-        window.requestAnimationFrame(() => focusElement.focus());
-      }
-      syncUrl();
-    }
-
-    function closeModal(modal) {
-      if (!modal) return;
-      modal.setAttribute('hidden', '');
-      syncUrl();
-    }
-
-    function attachModalHandlers(modal, focusElement) {
-      if (!modal) return null;
-      modal.querySelectorAll('[data-modal-close]').forEach((btn) => {
-        btn.addEventListener('click', (event) => {
-          event.preventDefault();
-          closeModal(modal);
-        });
-      });
-      modal.addEventListener('click', (event) => {
-        if (event.target.dataset && event.target.dataset.modalClose !== undefined) {
-          closeModal(modal);
-        }
-      });
-      return {
-        open: () => openModal(modal, focusElement),
-        close: () => closeModal(modal),
-      };
-    }
-
-    const categoryModalHandlers = attachModalHandlers(categoryModal, categoryFormField);
-    const serviceModalHandlers = attachModalHandlers(serviceModal, serviceNameField);
-    const eventModalHandlers = attachModalHandlers(eventModal);
-
-    if (toggle && subnav) {
-      toggle.addEventListener('click', () => {
-        const isExpanded = toggle.getAttribute('aria-expanded') === 'true';
-        toggle.setAttribute('aria-expanded', String(!isExpanded));
-        subnav.hidden = isExpanded;
-        setActiveSection('services');
-      });
-    }
-
-    navLinks.forEach((link) => {
-      link.addEventListener('click', (event) => {
-        const targetSection = link.dataset.sectionTarget;
-        if (!targetSection) return;
-        setActiveSection(targetSection);
-        event.preventDefault();
-      });
-    });
-
-    document.addEventListener('keydown', (event) => {
-      if (event.key !== 'Escape') {
-        return;
-      }
-      if (categoryModal && !categoryModal.hasAttribute('hidden')) {
-        closeModal(categoryModal);
-      }
-      if (serviceModal && !serviceModal.hasAttribute('hidden')) {
-        closeModal(serviceModal);
-      }
-      if (eventModal && !eventModal.hasAttribute('hidden')) {
-        closeModal(eventModal);
-      }
-    });
-
-    function fillEventModal(data) {
-      if (!eventFieldMap) return;
-      const fallback = '—';
-      eventFieldMap.date.textContent = data.date || fallback;
-      eventFieldMap.time.textContent = data.time || fallback;
-      eventFieldMap.title.textContent = data.title || fallback;
-      eventFieldMap.service.textContent = data.service || fallback;
-      eventFieldMap.category.textContent = data.category || fallback;
-      eventFieldMap.status.textContent = data.status || fallback;
-      eventFieldMap.created_by.textContent = data.created_by || fallback;
-      eventFieldMap.description.textContent = data.description || fallback;
-      if (eventFieldMap.deleteButton) {
-        const start = data.start || '';
-        const end = data.end || '';
-        eventFieldMap.deleteButton.dataset.eventStart = start;
-        eventFieldMap.deleteButton.dataset.eventEnd = end;
-        const ariaLabel = data.title ? `Supprimer ${data.title}` : 'Supprimer le rendez-vous';
-        eventFieldMap.deleteButton.setAttribute('aria-label', ariaLabel);
-      }
-    }
-
-    function updatePlannerButtons(view) {
-      plannerButtons.forEach((button) => {
-        button.classList.toggle('kitlast-planner__button--active', button.dataset.plannerAction === view);
-      });
-      if (plannerRangeLabel) {
-        plannerRangeLabel.textContent = view === 'week' ? 'Vue semaine' : 'Vue jour';
-      }
-    }
-
-    function showWeekView() {
-      if (!plannerColumnsContainer) return;
-      plannerColumnsContainer.classList.remove('kitlast-planner__columns--single');
-      plannerColumns.forEach((column) => column.classList.remove('is-hidden'));
-      updatePlannerButtons('week');
-      currentSingleColumn = null;
-    }
-
-    function showSingleDay(column, viewName) {
-      if (!plannerColumnsContainer || plannerColumns.length === 0) return;
-      const targetColumn = column || plannerColumns[0];
-      plannerColumns.forEach((col) => {
-        col.classList.toggle('is-hidden', col !== targetColumn);
-      });
-      plannerColumnsContainer.classList.add('kitlast-planner__columns--single');
-      updatePlannerButtons(viewName);
-      currentSingleColumn = targetColumn;
-    }
-
-    function showTodayView() {
-      if (!plannerColumnsContainer || plannerColumns.length === 0) return;
-      const today = new Date();
-      const formatted = today.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' });
-      const matchingColumn = plannerColumns.find((column) => column.dataset.plannerDate === formatted);
-      showSingleDay(matchingColumn, 'today');
-    }
-
-    const todayButton = document.querySelector('[data-planner-action="today"]');
-    const dayButton = document.querySelector('[data-planner-action="day"]');
-    const weekButton = document.querySelector('[data-planner-action="week"]');
-    const prevButton = document.querySelector('[data-planner-nav="prev"]');
-    const nextButton = document.querySelector('[data-planner-nav="next"]');
-    const plannerRangeLabel = document.querySelector('[data-planner-range]');
-
-    let currentSingleColumn = null;
-
-    todayButton?.addEventListener('click', () => {
-      showTodayView();
-    });
-
-    dayButton?.addEventListener('click', () => {
-      showTodayView();
-    });
-
-    weekButton?.addEventListener('click', () => {
-      showWeekView();
-    });
-
-    prevButton?.addEventListener('click', () => {
-      if (!plannerColumns.length) return;
-      if (!currentSingleColumn) {
-        showTodayView();
-        return;
-      }
-      const currentIndex = plannerColumns.indexOf(currentSingleColumn);
-      const previousColumn = plannerColumns[currentIndex - 1] || plannerColumns[plannerColumns.length - 1];
-      showSingleDay(previousColumn, 'day');
-    });
-
-    nextButton?.addEventListener('click', () => {
-      if (!plannerColumns.length) return;
-      if (!currentSingleColumn) {
-        showTodayView();
-        return;
-      }
-      const currentIndex = plannerColumns.indexOf(currentSingleColumn);
-      const nextColumn = plannerColumns[currentIndex + 1] || plannerColumns[0];
-      showSingleDay(nextColumn, 'day');
-    });
-
-    showWeekView();
-
-    if (plannerColumnsContainer && eventModalHandlers) {
-      plannerColumnsContainer.addEventListener('click', (evt) => {
-        const card = evt.target.closest('[data-planner-event]');
-        if (!card) {
-          return;
-        }
-        fillEventModal({
-          label: card.dataset.eventLabel,
-          date: card.dataset.eventDate,
-          time: card.dataset.eventTime,
-          title: card.dataset.eventTitle,
-          service: card.dataset.eventService,
-          category: card.dataset.eventCategory,
-          description: card.dataset.eventDescription,
-          status: card.dataset.eventStatus,
-          created_by: card.dataset.eventCreatedBy,
-          start: card.dataset.eventStart,
-          end: card.dataset.eventEnd,
-        });
-        eventModalHandlers.open();
-      });
-    }
-
-    if (sectionContainer) {
-      const active = sectionContainer.dataset.activeSection;
-      setActiveSection(active || 'overview');
-      if ((active === 'services') && categoryModalHandlers && {{ show_category_form|yesno:'true,false' }} ) {
-        categoryModalHandlers.open();
-      }
-      if ((active === 'services') && serviceModalHandlers && {{ show_service_form|yesno:'true,false' }} ) {
-        serviceModalHandlers.open();
-      }
-    }
-  })();
-</script>
 {% endblock %}

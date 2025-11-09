@@ -1,18 +1,22 @@
 {% load static %}
 <!doctype html>
 <html lang="fr">
+
 <head>
   <meta charset="utf-8" />
   <title>{% block title %}Booking Site{% endblock %}</title>
   <link rel="stylesheet" href="{% static 'css/global.css' %}">
   {% block head %}{% endblock %}
 </head>
+
 <body>
   {% if messages %}
-    <ul>
-      {% for message in messages %}<li>{{ message }}</li>{% endfor %}
-    </ul>
+  <ul>
+    {% for message in messages %}<li>{{ message }}</li>{% endfor %}
+  </ul>
   {% endif %}
   {% block content %}{% endblock %}
+  {% block scripts %}{% endblock %}
 </body>
+
 </html>

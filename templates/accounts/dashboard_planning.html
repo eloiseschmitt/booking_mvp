@@ -109,3 +109,31 @@
     </div>
   </div>
 </div>
+
+<div class="kitlast-modal" data-new-event-modal hidden>
+  <div class="kitlast-modal__overlay" data-modal-close></div>
+  <div class="kitlast-modal__content" role="dialog" aria-modal="true" aria-labelledby="new-event-modal-title">
+    <header class="kitlast-modal__header">
+      <h2 id="new-event-modal-title">Créer un rendez-vous</h2>
+      <button type="button" class="kitlast-modal__close" data-modal-close aria-label="Fermer la fenêtre">×</button>
+    </header>
+    <div class="kitlast-modal__body kitlast-event-modal__body">
+      <div class="kitlast-event-modal__row">
+        <span class="kitlast-event-modal__label">Date</span>
+        <span class="kitlast-event-modal__value" data-new-event-field="date">—</span>
+      </div>
+      <div class="kitlast-event-modal__row">
+        <span class="kitlast-event-modal__label">Horaire</span>
+        <span class="kitlast-event-modal__value" data-new-event-field="time">—</span>
+      </div>
+      <div class="kitlast-event-modal__row kitlast-event-modal__row--description">
+        <span class="kitlast-event-modal__label">Instructions</span>
+        <span class="kitlast-event-modal__value" data-new-event-field="message">Choisissez « Ajouter un événement » pour planifier une nouvelle réservation à cet horaire.</span>
+      </div>
+      <div class="kitlast-event-modal__actions">
+        <button type="button" class="kitlast-button" data-new-event-confirm>Ajouter un événement</button>
+        <button type="button" class="kitlast-button kitlast-button--ghost" data-modal-close>Annuler</button>
+      </div>
+    </div>
+  </div>
+</div>
