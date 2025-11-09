@@ -76,6 +76,37 @@ class DashboardViewTests(TestCase):
         self.assertTrue(response.context["show_service_form"])
         self.assertEqual(response.context["section"], "services")
 
+    def test_dashboard_lists_only_services_created_by_user(self):
+        self.login()
+        own_category = Category.objects.create(name="Massages détente")
+        other_category = Category.objects.create(name="Autres")
+        Service.objects.create(
+            category=own_category,
+            name="Massage relaxant",
+            created_by=self.user,
+            price="60.00",
+            duration_minutes=60,
+        )
+        other_user = User.objects.create_user(
+            email="other@example.com",
+            password="safe-password",
+            user_type=User.UserType.PROFESSIONAL,
+        )
+        Service.objects.create(
+            category=other_category,
+            name="Soin concurrent",
+            created_by=other_user,
+            price="80.00",
+            duration_minutes=90,
+        )
+
+        response = self.client.get(self.url, {"section": "services"})
+
+        categories = list(response.context["categories"])
+        self.assertEqual(categories, [own_category])
+        user_services = response.context["user_services"]
+        self.assertEqual([service.name for service in user_services], ["Massage relaxant"])
+
     def test_dashboard_get_shows_service_form_for_new_service(self):
         self.login()
         category = Category.objects.create(name="Coiffure")

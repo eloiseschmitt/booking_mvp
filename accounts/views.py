@@ -4,6 +4,7 @@ from datetime import timedelta
 
 from django.contrib.auth import logout
 from django.contrib.auth.decorators import login_required
+from django.db.models import Prefetch
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
@@ -20,7 +21,7 @@ def dashboard(request):
     # pylint: disable=too-many-branches,too-many-statements,too-many-locals
     section = request.GET.get("section", "overview")
     show_category_form = request.GET.get("show") == "category-form"
-    categories = Category.objects.prefetch_related("services").all()
+    categories = Category.objects.none()
     category_form = CategoryForm()
     service_form = ServiceForm()
     show_service_form = request.GET.get("show") == "service-form"
@@ -79,9 +80,15 @@ def dashboard(request):
         calendar = Calendar.objects.filter(owner=request.user).first()
         if calendar is None:
             calendar = Calendar.objects.filter(is_public=True).first()
-        user_services = list(
-            Service.objects.filter(created_by=request.user).order_by("name")
+        user_service_qs = Service.objects.filter(created_by=request.user).order_by("name")
+        categories = (
+            Category.objects.filter(services__created_by=request.user)
+            .prefetch_related(
+                Prefetch("services", queryset=user_service_qs)
+            )
+            .distinct()
         )
+        user_services = list(user_service_qs)
     else:
         user_services = []
 
