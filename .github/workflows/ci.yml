@@ -27,6 +27,7 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install django ruff mypy black==23.9.1 pylint coverage
+          npm install
 
       - name: Ruff
         run: ruff check .
@@ -41,6 +42,9 @@ jobs:
         env:
           DJANGO_SETTINGS_MODULE: booking_mvp.settings
         run: pylint accounts booking_mvp users
+
+      - name: Jest
+        run: npm test -- --runInBand
 
       - name: Tests & Coverage
         env:

@@ -80,7 +80,7 @@ python manage.py test accounts
 coverage run --source=accounts,booking_mvp,users manage.py test
 coverage xml -o coverage.xml
 
-# tests front (Jest)
+# tests front (Jest) – lancés aussi en CI
 npm install
 npm test
 ```
