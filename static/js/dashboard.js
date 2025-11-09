@@ -31,6 +31,7 @@ document.addEventListener('DOMContentLoaded', () => {
         time: newEventModal.querySelector('[data-new-event-field="time"]'),
         message: newEventModal.querySelector('[data-new-event-field="message"]'),
         confirm: newEventModal.querySelector('[data-new-event-confirm]'),
+        service: newEventModal.querySelector('[data-new-event-field="service"]'),
       }
     : null;
   const plannerColumnsContainer = document.querySelector('.kitlast-planner__columns');
@@ -223,6 +224,9 @@ document.addEventListener('DOMContentLoaded', () => {
       newEventFieldMap.confirm.dataset.newEventDate = data.dateIso;
       newEventFieldMap.confirm.dataset.newEventTime = data.timeIso;
     }
+    if (newEventFieldMap.service) {
+      newEventFieldMap.service.selectedIndex = 0;
+    }
   };
 
   const updatePlannerButtons = (view) => {
@@ -360,7 +364,18 @@ document.addEventListener('DOMContentLoaded', () => {
   if (newEventFieldMap?.confirm && newEventModalHandlers) {
     newEventFieldMap.confirm.addEventListener('click', () => {
       newEventModalHandlers.close();
-      window.location.href = `${window.location.pathname}?section=planning&new_event_start=${encodeURIComponent(newEventFieldMap.confirm.dataset.newEventDate || '')}`;
+      const url = new URL(window.location);
+      url.searchParams.set('section', 'planning');
+      url.searchParams.set(
+        'new_event_start',
+        newEventFieldMap.confirm.dataset.newEventDate || ''
+      );
+      if (newEventFieldMap.service && newEventFieldMap.service.value) {
+        url.searchParams.set('service_id', newEventFieldMap.service.value);
+      } else {
+        url.searchParams.delete('service_id');
+      }
+      window.location.href = url.toString();
     });
   }
 

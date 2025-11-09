@@ -126,6 +126,20 @@
         <span class="kitlast-event-modal__label">Horaire</span>
         <span class="kitlast-event-modal__value" data-new-event-field="time">—</span>
       </div>
+      <div class="kitlast-event-modal__row">
+        <label class="kitlast-event-modal__label" for="new-event-service">Prestation</label>
+        <div class="kitlast-event-modal__value">
+          <select id="new-event-service" data-new-event-field="service"
+            {% if not user_services %}disabled{% endif %}>
+            <option value="">Sélectionnez une prestation</option>
+            {% for service in user_services %}
+            <option value="{{ service.id }}">{{ service.name }}</option>
+            {% empty %}
+            <option value="" disabled>Aucune prestation disponible</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
       <div class="kitlast-event-modal__row kitlast-event-modal__row--description">
         <span class="kitlast-event-modal__label">Instructions</span>
         <span class="kitlast-event-modal__value" data-new-event-field="message">Choisissez « Ajouter un événement » pour planifier une nouvelle réservation à cet horaire.</span>

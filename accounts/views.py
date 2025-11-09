@@ -9,7 +9,7 @@ from django.urls import reverse
 from django.utils import timezone
 
 from .forms import CategoryForm, ServiceForm
-from .models import Calendar, Category, Workshop
+from .models import Calendar, Category, Service, Workshop
 from .planning import PLANNER_HOURS, build_calendar_events
 from .services import delete_service, prepare_service_form, save_service_form
 
@@ -79,6 +79,11 @@ def dashboard(request):
         calendar = Calendar.objects.filter(owner=request.user).first()
         if calendar is None:
             calendar = Calendar.objects.filter(is_public=True).first()
+        user_services = list(
+            Service.objects.filter(created_by=request.user).order_by("name")
+        )
+    else:
+        user_services = []
 
     try:
         week_offset = int(request.GET.get("week_offset", "0"))
@@ -104,6 +109,7 @@ def dashboard(request):
         "planning_days": build_calendar_events(calendar, week_offset=week_offset),
         "week_offset": week_offset,
         "planner_week_summary": planner_week_summary,
+        "user_services": user_services,
     }
     return render(request, "accounts/dashboard.html", context)
 
