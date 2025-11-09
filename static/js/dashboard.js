@@ -14,25 +14,25 @@ document.addEventListener('DOMContentLoaded', () => {
   const serviceNameField = serviceModal ? serviceModal.querySelector('input[name="name"]') : null;
   const eventFieldMap = eventModal
     ? {
-        date: eventModal.querySelector('[data-event-field="date"]'),
-        time: eventModal.querySelector('[data-event-field="time"]'),
-        title: eventModal.querySelector('[data-event-field="title"]'),
-        service: eventModal.querySelector('[data-event-field="service"]'),
-        category: eventModal.querySelector('[data-event-field="category"]'),
-        status: eventModal.querySelector('[data-event-field="status"]'),
-        created_by: eventModal.querySelector('[data-event-field="created_by"]'),
-        description: eventModal.querySelector('[data-event-field="description"]'),
-        deleteButton: eventModal.querySelector('[data-event-delete]'),
-      }
+      date: eventModal.querySelector('[data-event-field="date"]'),
+      time: eventModal.querySelector('[data-event-field="time"]'),
+      title: eventModal.querySelector('[data-event-field="title"]'),
+      service: eventModal.querySelector('[data-event-field="service"]'),
+      category: eventModal.querySelector('[data-event-field="category"]'),
+      status: eventModal.querySelector('[data-event-field="status"]'),
+      created_by: eventModal.querySelector('[data-event-field="created_by"]'),
+      description: eventModal.querySelector('[data-event-field="description"]'),
+      deleteButton: eventModal.querySelector('[data-event-delete]'),
+    }
     : null;
   const newEventFieldMap = newEventModal
     ? {
-        date: newEventModal.querySelector('[data-new-event-field="date"]'),
-        time: newEventModal.querySelector('[data-new-event-field="time"]'),
-        message: newEventModal.querySelector('[data-new-event-field="message"]'),
-        confirm: newEventModal.querySelector('[data-new-event-confirm]'),
-        service: newEventModal.querySelector('[data-new-event-field="service"]'),
-      }
+      date: newEventModal.querySelector('[data-new-event-field="date"]'),
+      time: newEventModal.querySelector('[data-new-event-field="time"]'),
+      message: newEventModal.querySelector('[data-new-event-field="message"]'),
+      confirm: newEventModal.querySelector('[data-new-event-confirm]'),
+      service: newEventModal.querySelector('[data-new-event-field="service"]'),
+    }
     : null;
   const plannerColumnsContainer = document.querySelector('.kitlast-planner__columns');
   const plannerColumns = plannerColumnsContainer ? Array.from(plannerColumnsContainer.querySelectorAll('[data-planner-column]')) : [];
@@ -106,11 +106,20 @@ document.addEventListener('DOMContentLoaded', () => {
     modal.querySelectorAll('[data-modal-close]').forEach((btn) => {
       btn.addEventListener('click', (event) => {
         event.preventDefault();
+        event.stopPropagation();
         closeModal(modal);
       });
     });
     modal.addEventListener('click', (event) => {
-      if (event.target.dataset && event.target.dataset.modalClose !== undefined) {
+      const target = event.target;
+      const elementTarget =
+        target && target.nodeType === Node.ELEMENT_NODE
+          ? target
+          : target?.parentElement;
+      const closer = elementTarget?.closest('[data-modal-close]');
+      const isBackdropClick = target === modal;
+      if (closer || isBackdropClick) {
+        event.stopPropagation();
         closeModal(modal);
       }
     });
@@ -179,6 +188,32 @@ document.addEventListener('DOMContentLoaded', () => {
       closeModal(newEventModal);
     }
   });
+
+  document.addEventListener(
+    'click',
+    (event) => {
+      const target = event.target;
+      if (!(target instanceof Element)) {
+        return;
+      }
+      const modalContainer = target.closest('.kitlast-modal');
+      const explicitCloser = target.closest('[data-modal-close]');
+
+      if (explicitCloser && modalContainer) {
+        event.preventDefault();
+        event.stopPropagation();
+        closeModal(modalContainer);
+        return;
+      }
+
+      if (modalContainer && target === modalContainer) {
+        console.log('backdrop close');
+        event.preventDefault();
+        event.stopPropagation();
+      }
+    },
+    true
+  );
 
   const minutesToTime = (totalMinutes) => {
     const hours = String(Math.floor(totalMinutes / 60)).padStart(2, '0');
