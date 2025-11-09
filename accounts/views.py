@@ -1,9 +1,12 @@
 """Views for the accounts application."""
 
+from datetime import timedelta
+
 from django.contrib.auth import logout
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
+from django.utils import timezone
 
 from .forms import CategoryForm, ServiceForm
 from .models import Calendar, Category, Workshop
@@ -77,6 +80,19 @@ def dashboard(request):
         if calendar is None:
             calendar = Calendar.objects.filter(is_public=True).first()
 
+    try:
+        week_offset = int(request.GET.get("week_offset", "0"))
+    except (TypeError, ValueError):
+        week_offset = 0
+
+    today = timezone.localdate()
+    start_of_week = today - timedelta(days=today.weekday()) + timedelta(weeks=week_offset)
+    end_of_week = start_of_week + timedelta(days=6)
+    planner_week_summary = (
+        f"Semaine {start_of_week.isocalendar().week} · "
+        f"{start_of_week.strftime('%d/%m')} → {end_of_week.strftime('%d/%m')}"
+    )
+
     context = {
         "section": section,
         "categories": categories,
@@ -85,7 +101,9 @@ def dashboard(request):
         "service_form": service_form,
         "show_service_form": show_service_form,
         "planner_hours": PLANNER_HOURS,
-        "planning_days": build_calendar_events(calendar),
+        "planning_days": build_calendar_events(calendar, week_offset=week_offset),
+        "week_offset": week_offset,
+        "planner_week_summary": planner_week_summary,
     }
     return render(request, "accounts/dashboard.html", context)
 

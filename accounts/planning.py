@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections import defaultdict
-from datetime import datetime
+from datetime import date, datetime, time, timedelta
 
 from django.utils import timezone
 
@@ -47,24 +47,37 @@ def _weekday_label(value: datetime) -> str:
     return ["Lun.", "Mar.", "Mer.", "Jeu.", "Ven.", "Sam.", "Dim."][value.weekday()]
 
 
-def _fallback_sample_week() -> list[dict[str, object]]:
-    base_year = timezone.localdate().year
+def _start_of_week(week_offset: int) -> date:
+    """Return the date for the Monday of the requested week offset."""
+
+    today = timezone.localdate()
+    current_week_start = today - timedelta(days=today.weekday())
+    return current_week_start + timedelta(weeks=week_offset)
+
+
+def _fallback_sample_week(start_of_week: date) -> list[dict[str, object]]:
+    tz = timezone.get_current_timezone()
     fallback: list[dict[str, object]] = []
-    for label, date_label, events in FALLBACK_WEEK:
+    for index, (_, _, events) in enumerate(FALLBACK_WEEK):
+        current_date = start_of_week + timedelta(days=index)
+        day_label = _weekday_label(
+            datetime.combine(current_date, time.min)
+        )
+        date_label = current_date.strftime("%d/%m")
         day_events: list[dict[str, object]] = []
-        for start, end, service_name, person, color in events:
-            start_dt = datetime.strptime(
-                f"{date_label}/{base_year} {start}", "%d/%m/%Y %H:%M"
+        for event_index, event in enumerate(events):
+            start, end, service_name, person, *color_override = event
+            color = (
+                color_override[0]
+                if color_override
+                else _event_colour(event_index)
             )
-            end_dt = datetime.strptime(
-                f"{date_label}/{base_year} {end}", "%d/%m/%Y %H:%M"
+            start_dt = datetime.combine(
+                current_date, time.fromisoformat(start)
             )
-            start_iso = timezone.make_aware(
-                start_dt, timezone.get_current_timezone()
-            ).isoformat()
-            end_iso = timezone.make_aware(
-                end_dt, timezone.get_current_timezone()
-            ).isoformat()
+            end_dt = datetime.combine(current_date, time.fromisoformat(end))
+            start_iso = timezone.make_aware(start_dt, tz).isoformat()
+            end_iso = timezone.make_aware(end_dt, tz).isoformat()
             day_events.append(
                 {
                     "time": f"{start} – {end}",
@@ -80,14 +93,20 @@ def _fallback_sample_week() -> list[dict[str, object]]:
                     **_compute_block(start, end),
                 }
             )
-        fallback.append({"label": label, "date": date_label, "events": day_events})
+        fallback.append({"label": day_label, "date": date_label, "events": day_events})
     return fallback
 
 
-def _empty_week() -> list[dict[str, object]]:
+def _empty_week(start_of_week: date) -> list[dict[str, object]]:
     return [
-        {"label": label, "date": date_label, "events": []}
-        for label, date_label, _ in FALLBACK_WEEK
+        {
+            "label": _weekday_label(
+                datetime.combine(start_of_week + timedelta(days=index), time.min)
+            ),
+            "date": (start_of_week + timedelta(days=index)).strftime("%d/%m"),
+            "events": [],
+        }
+        for index in range(7)
     ]
 
 
@@ -170,23 +189,33 @@ def _group_event_views(event_views: list[EventView]) -> list[dict[str, object]]:
     ]
 
 
-def build_calendar_events(calendar: Calendar | None) -> list[dict[str, object]]:
+def build_calendar_events(
+    calendar: Calendar | None, week_offset: int = 0
+) -> list[dict[str, object]]:
     """Generate planner data either from the database or fallback sample data."""
 
-    if calendar is None:
-        return SAMPLE_WEEK
+    start_of_week = _start_of_week(week_offset)
 
-    queryset = list(calendar.events.select_related("created_by").order_by("start_at"))
+    if calendar is None:
+        return _fallback_sample_week(start_of_week)
+
+    tz = timezone.get_current_timezone()
+    start_dt = timezone.make_aware(
+        datetime.combine(start_of_week, time.min), tz
+    )
+    end_dt = start_dt + timedelta(days=7)
+
+    queryset = list(
+        calendar.events.select_related("created_by")
+        .filter(start_at__gte=start_dt, start_at__lt=end_dt)
+        .order_by("start_at")
+    )
     if not queryset:
-        return _empty_week()
+        return _empty_week(start_of_week)
 
     service_lookup = _build_service_lookup(queryset)
     event_views = [
         _build_event_view(event, index, service_lookup)
         for index, event in enumerate(queryset)
     ]
-
     return _group_event_views(event_views)
-
-
-SAMPLE_WEEK = _fallback_sample_week()

@@ -49,7 +49,8 @@
 
       <div class="kitlast-dashboard-content" data-active-section="{{ section }}"
         data-show-category="{{ show_category_form|yesno:'true,false' }}"
-        data-show-service="{{ show_service_form|yesno:'true,false' }}">
+        data-show-service="{{ show_service_form|yesno:'true,false' }}"
+        data-week-offset="{{ week_offset }}">
         <section class="kitlast-content-section{% if section == 'overview' %} is-active{% endif %}"
           data-section="overview">
           <div class="kitlast-card kitlast-welcome-card">

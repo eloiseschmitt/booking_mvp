@@ -1,12 +1,13 @@
 """Tests for planning helpers."""
 
+from datetime import timedelta
+
 from django.contrib.auth import get_user_model
 from django.test import TestCase
+from django.utils import timezone
 
 from accounts.models import Calendar
-from accounts.planning import build_calendar_events
-
-from accounts.planning import _compute_block
+from accounts.planning import _compute_block, build_calendar_events
 
 
 class PlanningHelpersTests(TestCase):
@@ -46,3 +47,32 @@ class BuildCalendarEventsTests(TestCase):
 
         self.assertTrue(all(not day["events"] for day in data))
         self.assertEqual(len(data), 7)
+
+    def test_week_offset_filters_events(self):
+        """Events are scoped to the requested week offset."""
+
+        calendar = Calendar.objects.create(
+            owner=self.user,
+            name="Personal",
+            slug="personal",
+        )
+
+        base_start = timezone.now().replace(minute=0, second=0, microsecond=0)
+        calendar.events.create(
+            title="This week",
+            start_at=base_start,
+            end_at=base_start + timedelta(hours=1),
+            status="planned",
+        )
+        calendar.events.create(
+            title="Next week",
+            start_at=base_start + timedelta(days=7),
+            end_at=base_start + timedelta(days=7, hours=1),
+            status="planned",
+        )
+
+        this_week = build_calendar_events(calendar, week_offset=0)
+        next_week = build_calendar_events(calendar, week_offset=1)
+
+        self.assertEqual(sum(len(day["events"]) for day in this_week), 1)
+        self.assertEqual(sum(len(day["events"]) for day in next_week), 1)

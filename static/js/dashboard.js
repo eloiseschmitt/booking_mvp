@@ -45,6 +45,24 @@ document.addEventListener('DOMContentLoaded', () => {
 
   let currentSection = sectionContainer ? sectionContainer.dataset.activeSection || 'overview' : 'overview';
   let currentSingleColumn = null;
+  let currentViewMode = 'week';
+
+  const readWeekOffset = () => {
+    if (!sectionContainer) return 0;
+    const value = sectionContainer.dataset.weekOffset;
+    const parsed = Number.parseInt(value || '0', 10);
+    return Number.isNaN(parsed) ? 0 : parsed;
+  };
+
+  const navigateWeek = (delta) => {
+    const url = new URL(window.location);
+    const existing = url.searchParams.get('week_offset');
+    const parsedExisting = existing !== null ? Number.parseInt(existing, 10) : NaN;
+    const baseOffset = Number.isNaN(parsedExisting) ? readWeekOffset() : parsedExisting;
+    url.searchParams.set('section', 'planning');
+    url.searchParams.set('week_offset', (baseOffset + delta).toString());
+    window.location.href = url.toString();
+  };
 
   const syncUrl = () => {
     try {
@@ -222,6 +240,7 @@ document.addEventListener('DOMContentLoaded', () => {
     plannerColumns.forEach((column) => column.classList.remove('is-hidden'));
     updatePlannerButtons('week');
     currentSingleColumn = null;
+    currentViewMode = 'week';
   };
 
   const showSingleDay = (column, viewName) => {
@@ -233,6 +252,7 @@ document.addEventListener('DOMContentLoaded', () => {
     plannerColumnsContainer.classList.add('kitlast-planner__columns--single');
     updatePlannerButtons(viewName);
     currentSingleColumn = targetColumn;
+    currentViewMode = viewName;
   };
 
   const showTodayView = () => {
@@ -255,26 +275,34 @@ document.addEventListener('DOMContentLoaded', () => {
     showWeekView();
   });
 
-  prevButton?.addEventListener('click', () => {
+  const navigateDayView = (direction) => {
     if (!plannerColumns.length) return;
     if (!currentSingleColumn) {
       showTodayView();
       return;
     }
     const currentIndex = plannerColumns.indexOf(currentSingleColumn);
-    const previousColumn = plannerColumns[currentIndex - 1] || plannerColumns[plannerColumns.length - 1];
-    showSingleDay(previousColumn, 'day');
+    const targetColumn =
+      direction === 'previous'
+        ? plannerColumns[currentIndex - 1] || plannerColumns[plannerColumns.length - 1]
+        : plannerColumns[currentIndex + 1] || plannerColumns[0];
+    showSingleDay(targetColumn, 'day');
+  };
+
+  prevButton?.addEventListener('click', () => {
+    if (currentViewMode === 'week') {
+      navigateWeek(-1);
+      return;
+    }
+    navigateDayView('previous');
   });
 
   nextButton?.addEventListener('click', () => {
-    if (!plannerColumns.length) return;
-    if (!currentSingleColumn) {
-      showTodayView();
+    if (currentViewMode === 'week') {
+      navigateWeek(1);
       return;
     }
-    const currentIndex = plannerColumns.indexOf(currentSingleColumn);
-    const nextColumn = plannerColumns[currentIndex + 1] || plannerColumns[0];
-    showSingleDay(nextColumn, 'day');
+    navigateDayView('next');
   });
 
   showWeekView();
