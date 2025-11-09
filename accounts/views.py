@@ -91,7 +91,9 @@ def dashboard(request):
         week_offset = 0
 
     today = timezone.localdate()
-    start_of_week = today - timedelta(days=today.weekday()) + timedelta(weeks=week_offset)
+    start_of_week = (
+        today - timedelta(days=today.weekday()) + timedelta(weeks=week_offset)
+    )
     end_of_week = start_of_week + timedelta(days=6)
     planner_week_summary = (
         f"Semaine {start_of_week.isocalendar().week} · "

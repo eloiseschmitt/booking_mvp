@@ -60,21 +60,13 @@ def _fallback_sample_week(start_of_week: date) -> list[dict[str, object]]:
     fallback: list[dict[str, object]] = []
     for index, (_, _, events) in enumerate(FALLBACK_WEEK):
         current_date = start_of_week + timedelta(days=index)
-        day_label = _weekday_label(
-            datetime.combine(current_date, time.min)
-        )
+        day_label = _weekday_label(datetime.combine(current_date, time.min))
         date_label = current_date.strftime("%d/%m")
         day_events: list[dict[str, object]] = []
         for event_index, event in enumerate(events):
             start, end, service_name, person, *color_override = event
-            color = (
-                color_override[0]
-                if color_override
-                else _event_colour(event_index)
-            )
-            start_dt = datetime.combine(
-                current_date, time.fromisoformat(start)
-            )
+            color = color_override[0] if color_override else _event_colour(event_index)
+            start_dt = datetime.combine(current_date, time.fromisoformat(start))
             end_dt = datetime.combine(current_date, time.fromisoformat(end))
             start_iso = timezone.make_aware(start_dt, tz).isoformat()
             end_iso = timezone.make_aware(end_dt, tz).isoformat()
@@ -118,7 +110,9 @@ def _build_service_lookup(events: list) -> dict[str, Service]:
         return {}
     return {
         service.name: service
-        for service in Service.objects.filter(name__in=titles).select_related("category")
+        for service in Service.objects.filter(name__in=titles).select_related(
+            "category"
+        )
     }
 
 
@@ -139,7 +133,9 @@ def _event_colour(index: int) -> str:
     return PLANNER_COLOR_PALETTE[index % len(PLANNER_COLOR_PALETTE)]
 
 
-def _build_event_view(event, index: int, service_lookup: dict[str, Service]) -> EventView:
+def _build_event_view(
+    event, index: int, service_lookup: dict[str, Service]
+) -> EventView:
     """Convert a database event into the EventView structure expected by the UI."""
 
     start_local = timezone.localtime(event.start_at)
@@ -200,9 +196,7 @@ def build_calendar_events(
         return _fallback_sample_week(start_of_week)
 
     tz = timezone.get_current_timezone()
-    start_dt = timezone.make_aware(
-        datetime.combine(start_of_week, time.min), tz
-    )
+    start_dt = timezone.make_aware(datetime.combine(start_of_week, time.min), tz)
     end_dt = start_dt + timedelta(days=7)
 
     queryset = list(
