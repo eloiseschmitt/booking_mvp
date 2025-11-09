@@ -1,0 +1,12 @@
+{
+  "name": "booking_mvp",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "test": "jest",
+    "test:js": "jest"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0"
+  }
+}

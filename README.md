@@ -79,6 +79,10 @@ python manage.py test accounts
 # ou avec couverture
 coverage run --source=accounts,booking_mvp,users manage.py test
 coverage xml -o coverage.xml
+
+# tests front (Jest)
+npm install
+npm test
 ```
 
 Les tests couvrent notamment :

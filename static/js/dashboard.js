@@ -1,4 +1,4 @@
-document.addEventListener('DOMContentLoaded', () => {
+const initializeDashboard = () => {
   /* Script originally embedded in dashboard.html. */
 
   const toggle = document.querySelector('.kitlast-dashboard-sidebar__toggle');
@@ -430,4 +430,12 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     }
   }
+};
+
+document.addEventListener('DOMContentLoaded', () => {
+  initializeDashboard();
 });
+
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = { initializeDashboard };
+}
