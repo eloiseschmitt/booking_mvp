@@ -51,97 +51,16 @@
   </div>
 </section>
 
-<div class="kitlast-modal" data-category-modal {% if not show_category_form and not category_form.errors %}hidden{%endif %}>
-  <div class="kitlast-modal__overlay" data-modal-close></div>
-  <div class="kitlast-modal__content" role="dialog" aria-modal="true" aria-labelledby="category-modal-title">
-    <header class="kitlast-modal__header">
-      <h2 id="category-modal-title">Ajouter une catégorie</h2>
-      <button type="button" class="kitlast-modal__close" data-modal-close aria-label="Fermer la modale">×</button>
-    </header>
-    <div class="kitlast-modal__body">
-      <form method="post" action="{% url 'dashboard' %}?section=services" class="kitlast-modal__form">
-        {% csrf_token %}
-        <input type="hidden" name="action" value="add_category">
-        <div class="kitlast-field">
-          {{ category_form.name.label_tag }}
-          {{ category_form.name }}
-          {% if category_form.name.errors %}
-          <div class="kitlast-field__errors">
-            {% for error in category_form.name.errors %}{{ error }}{% endfor %}
-          </div>
-          {% endif %}
-        </div>
-        <div class="kitlast-modal__actions">
-          <button type="button" class="kitlast-button kitlast-button--ghost" data-modal-close>Annuler</button>
-          <button type="submit" class="kitlast-button">Valider</button>
-        </div>
-      </form>
-    </div>
-  </div>
-</div>
+{% include "accounts/components/modal_wrapper.html" with
+  modal_data_attr='data-category-modal'
+  modal_title='Ajouter une catégorie'
+  modal_title_id='category-modal-title'
+  modal_body_template='accounts/components/modal_category_form.html'
+  modal_should_show=show_category_form or category_form.errors %}
 
-<div class="kitlast-modal" data-service-modal {% if not show_service_form and not service_form.errors %}hidden{% endif%}>
-  <div class="kitlast-modal__overlay" data-modal-close></div>
-  <div class="kitlast-modal__content" role="dialog" aria-modal="true" aria-labelledby="service-modal-title">
-    <header class="kitlast-modal__header">
-      <h2 id="service-modal-title">{% if service_form.instance.pk %}Modifier une prestation{% else %}Ajouter une prestation{% endif %}</h2>
-      <button type="button" class="kitlast-modal__close" data-modal-close aria-label="Fermer la modale">×</button>
-    </header>
-    <div class="kitlast-modal__body">
-      <form method="post" action="{% url 'dashboard' %}?section=services" class="kitlast-modal__form">
-        {% csrf_token %}
-        <input type="hidden" name="action" value="{% if service_form.instance.pk %}update_service{% else %}add_service{% endif %}">
-        {% if service_form.instance.pk %}
-        <input type="hidden" name="service_id" value="{{ service_form.instance.pk }}">
-        {% endif %}
-        {% if service_form.non_field_errors %}
-        <div class="kitlast-field__errors">
-          {% for error in service_form.non_field_errors %}{{ error }}{% endfor %}
-        </div>
-        {% endif %}
-        <div class="kitlast-field">
-          {{ service_form.name.label_tag }}
-          {{ service_form.name }}
-          {% if service_form.name.errors %}
-          <div class="kitlast-field__errors">
-            {% for error in service_form.name.errors %}{{ error }}{% endfor %}
-          </div>
-          {% endif %}
-        </div>
-        <div class="kitlast-field">
-          {{ service_form.category.label_tag }}
-          {{ service_form.category }}
-          {% if service_form.category.errors %}
-          <div class="kitlast-field__errors">
-            {% for error in service_form.category.errors %}{{ error }}{% endfor %}
-          </div>
-          {% endif %}
-        </div>
-        <div class="kitlast-modal__row">
-          <div class="kitlast-field">
-            {{ service_form.price.label_tag }}
-            {{ service_form.price }}
-            {% if service_form.price.errors %}
-            <div class="kitlast-field__errors">
-              {% for error in service_form.price.errors %}{{ error }}{% endfor %}
-            </div>
-            {% endif %}
-          </div>
-          <div class="kitlast-field">
-            {{ service_form.duration_minutes.label_tag }}
-            {{ service_form.duration_minutes }}
-            {% if service_form.duration_minutes.errors %}
-            <div class="kitlast-field__errors">
-              {% for error in service_form.duration_minutes.errors %}{{ error }}{% endfor %}
-            </div>
-            {% endif %}
-          </div>
-        </div>
-        <div class="kitlast-modal__actions">
-          <button type="button" class="kitlast-button kitlast-button--ghost" data-modal-close>Annuler</button>
-          <button type="submit" class="kitlast-button">Valider</button>
-        </div>
-      </form>
-    </div>
-  </div>
-</div>
+{% include "accounts/components/modal_wrapper.html" with
+  modal_data_attr='data-service-modal'
+  modal_title=service_form.instance.pk|yesno:'Modifier une prestation,Ajouter une prestation'
+  modal_title_id='service-modal-title'
+  modal_body_template='accounts/components/modal_service_form.html'
+  modal_should_show=show_service_form or service_form.errors %}

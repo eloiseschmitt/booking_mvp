@@ -1,0 +1,12 @@
+<div class="kitlast-modal" {{ modal_data_attr }} {% if not modal_should_show|default:False %}hidden{% endif %}>
+  <div class="kitlast-modal__overlay" data-modal-close></div>
+  <div class="kitlast-modal__content" role="dialog" aria-modal="true" aria-labelledby="{{ modal_title_id }}">
+    <header class="kitlast-modal__header">
+      <h2 id="{{ modal_title_id }}">{{ modal_title }}</h2>
+      <button type="button" class="kitlast-modal__close" data-modal-close aria-label="Fermer la modale">×</button>
+    </header>
+    <div class="kitlast-modal__body">
+      {% include modal_body_template %}
+    </div>
+  </div>
+</div>

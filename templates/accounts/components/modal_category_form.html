@@ -1,0 +1,17 @@
+<form method="post" action="{% url 'dashboard' %}?section=services" class="kitlast-modal__form">
+  {% csrf_token %}
+  <input type="hidden" name="action" value="add_category">
+  <div class="kitlast-field">
+    {{ category_form.name.label_tag }}
+    {{ category_form.name }}
+    {% if category_form.name.errors %}
+    <div class="kitlast-field__errors">
+      {% for error in category_form.name.errors %}{{ error }}{% endfor %}
+    </div>
+    {% endif %}
+  </div>
+  <div class="kitlast-modal__actions">
+    <button type="button" class="kitlast-button kitlast-button--ghost" data-modal-close>Annuler</button>
+    <button type="submit" class="kitlast-button">Valider</button>
+  </div>
+</form>

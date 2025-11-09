@@ -1,0 +1,54 @@
+<form method="post" action="{% url 'dashboard' %}?section=services" class="kitlast-modal__form">
+  {% csrf_token %}
+  <input type="hidden" name="action" value="{% if service_form.instance.pk %}update_service{% else %}add_service{% endif %}">
+  {% if service_form.instance.pk %}
+  <input type="hidden" name="service_id" value="{{ service_form.instance.pk }}">
+  {% endif %}
+  {% if service_form.non_field_errors %}
+  <div class="kitlast-field__errors">
+    {% for error in service_form.non_field_errors %}{{ error }}{% endfor %}
+  </div>
+  {% endif %}
+  <div class="kitlast-field">
+    {{ service_form.name.label_tag }}
+    {{ service_form.name }}
+    {% if service_form.name.errors %}
+    <div class="kitlast-field__errors">
+      {% for error in service_form.name.errors %}{{ error }}{% endfor %}
+    </div>
+    {% endif %}
+  </div>
+  <div class="kitlast-field">
+    {{ service_form.category.label_tag }}
+    {{ service_form.category }}
+    {% if service_form.category.errors %}
+    <div class="kitlast-field__errors">
+      {% for error in service_form.category.errors %}{{ error }}{% endfor %}
+    </div>
+    {% endif %}
+  </div>
+  <div class="kitlast-modal__row">
+    <div class="kitlast-field">
+      {{ service_form.price.label_tag }}
+      {{ service_form.price }}
+      {% if service_form.price.errors %}
+      <div class="kitlast-field__errors">
+        {% for error in service_form.price.errors %}{{ error }}{% endfor %}
+      </div>
+      {% endif %}
+    </div>
+    <div class="kitlast-field">
+      {{ service_form.duration_minutes.label_tag }}
+      {{ service_form.duration_minutes }}
+      {% if service_form.duration_minutes.errors %}
+      <div class="kitlast-field__errors">
+        {% for error in service_form.duration_minutes.errors %}{{ error }}{% endfor %}
+      </div>
+      {% endif %}
+    </div>
+  </div>
+  <div class="kitlast-modal__actions">
+    <button type="button" class="kitlast-button kitlast-button--ghost" data-modal-close>Annuler</button>
+    <button type="submit" class="kitlast-button">Valider</button>
+  </div>
+</form>
