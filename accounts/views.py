@@ -80,12 +80,12 @@ def dashboard(request):
         calendar = Calendar.objects.filter(owner=request.user).first()
         if calendar is None:
             calendar = Calendar.objects.filter(is_public=True).first()
-        user_service_qs = Service.objects.filter(created_by=request.user).order_by("name")
+        user_service_qs = Service.objects.filter(created_by=request.user).order_by(
+            "name"
+        )
         categories = (
             Category.objects.filter(services__created_by=request.user)
-            .prefetch_related(
-                Prefetch("services", queryset=user_service_qs)
-            )
+            .prefetch_related(Prefetch("services", queryset=user_service_qs))
             .distinct()
         )
         user_services = list(user_service_qs)

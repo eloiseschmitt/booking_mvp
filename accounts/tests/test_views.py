@@ -105,7 +105,9 @@ class DashboardViewTests(TestCase):
         categories = list(response.context["categories"])
         self.assertEqual(categories, [own_category])
         user_services = response.context["user_services"]
-        self.assertEqual([service.name for service in user_services], ["Massage relaxant"])
+        self.assertEqual(
+            [service.name for service in user_services], ["Massage relaxant"]
+        )
 
     def test_dashboard_get_shows_service_form_for_new_service(self):
         self.login()
