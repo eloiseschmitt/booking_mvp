@@ -1,3 +1,5 @@
+{% load modal_tags %}
+
 <section class="kitlast-content-section{% if section == 'services' %} is-active{% endif %}"
   data-section="services">
   <header class="kitlast-section-header">
@@ -51,16 +53,6 @@
   </div>
 </section>
 
-{% include "accounts/components/modal_wrapper.html" with
-  modal_data_attr='data-category-modal'
-  modal_title='Ajouter une catégorie'
-  modal_title_id='category-modal-title'
-  modal_body_template='accounts/components/modal_category_form.html'
-  modal_should_show=show_category_form or category_form.errors %}
+{% render_modal modal_data_attr='data-category-modal' modal_title='Ajouter une catégorie' modal_title_id='category-modal-title' modal_body_template='accounts/components/modal_category_form.html' modal_should_show=show_category_modal %}
 
-{% include "accounts/components/modal_wrapper.html" with
-  modal_data_attr='data-service-modal'
-  modal_title=service_form.instance.pk|yesno:'Modifier une prestation,Ajouter une prestation'
-  modal_title_id='service-modal-title'
-  modal_body_template='accounts/components/modal_service_form.html'
-  modal_should_show=show_service_form or service_form.errors %}
+{% render_modal modal_data_attr='data-service-modal' modal_title=service_form.instance.pk|yesno:'Modifier une prestation,Ajouter une prestation' modal_title_id='service-modal-title' modal_body_template='accounts/components/modal_service_form.html' modal_should_show=show_service_modal %}
