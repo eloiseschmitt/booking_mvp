@@ -381,9 +381,15 @@ const initializeDashboard = () => {
 
       const rect = timeline.getBoundingClientRect();
       const clampedY = Math.min(Math.max(evt.clientY, rect.top), rect.bottom);
-      const ratio = rect.height ? (clampedY - rect.top) / rect.height : 0;
+      let ratio = rect.height ? (clampedY - rect.top) / rect.height : 0;
+      if (ratio > 0.98) {
+        ratio = 1;
+      }
       const totalMinutes = 12 * 60;
-      const minutesFromStart = Math.round((ratio * totalMinutes) / 15) * 15;
+      const minutesFromStart = Math.min(
+        totalMinutes,
+        Math.round((ratio * totalMinutes) / 15) * 15
+      );
       const absoluteMinutes = 8 * 60 + minutesFromStart;
       const timeDisplay = minutesToTime(absoluteMinutes);
 

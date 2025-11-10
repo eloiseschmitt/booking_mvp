@@ -607,6 +607,8 @@
 }
 
 .kitlast-planner {
+    --planner-row-height: 60px;
+    --planner-row-count: 12;
     background: var(--surface);
     border-radius: 18px;
     border: 1px solid rgba(0, 106, 78, 0.12);
@@ -705,18 +707,21 @@
     display: grid;
     grid-template-columns: 80px 1fr;
     gap: 12px;
+    align-items: stretch;
 }
 
 .kitlast-planner__hours {
     display: flex;
     flex-direction: column;
-    gap: 32px;
+    gap: 0;
+    justify-content: space-between;
+    height: calc(var(--planner-row-count, 12) * var(--planner-row-height, 60px));
     font-size: 0.82rem;
     color: var(--muted);
 }
 
 .kitlast-planner__hours span {
-    height: 60px;
+    height: auto;
 }
 
 .kitlast-planner__columns {
@@ -758,7 +763,8 @@
     position: relative;
     background: rgba(0, 106, 78, 0.05);
     border-radius: 14px;
-    min-height: 720px;
+    height: calc(var(--planner-row-count, 12) * var(--planner-row-height, 60px));
+    min-height: calc(var(--planner-row-count, 12) * var(--planner-row-height, 60px));
     overflow: hidden;
 }
 
@@ -767,7 +773,7 @@
     position: absolute;
     inset: 0;
     background-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.04) 1px, transparent 1px);
-    background-size: 100% 60px;
+    background-size: 100% var(--planner-row-height, 60px);
     pointer-events: none;
 }
 

@@ -1,6 +1,6 @@
 <section class="kitlast-content-section{% if section == 'planning' %} is-active{% endif %}"
   data-section="planning">
-  <div class="kitlast-planner">
+  <div class="kitlast-planner" style="--planner-row-count: {{ planner_hours|length|add:'-1' }}">
     <header class="kitlast-planner__header">
       <div class="kitlast-planner__header-left">
         <button type="button" class="kitlast-planner__nav" data-planner-nav="prev" aria-label="Jour précédent">
@@ -129,7 +129,7 @@
       <div class="kitlast-event-modal__row">
         <label class="kitlast-event-modal__label" for="new-event-service">Prestation</label>
         <div class="kitlast-event-modal__value">
-          <select id="new-event-service" data-new-event-field="service"
+          <select id="new-event-service" class="kitlast-input" data-new-event-field="service"
             {% if not user_services %}disabled{% endif %}>
             <option value="">Sélectionnez une prestation</option>
             {% for service in user_services %}
