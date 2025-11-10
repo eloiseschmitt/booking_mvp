@@ -15,6 +15,7 @@ class UserAdmin(BaseUserAdmin):
         "email",
         "first_name",
         "last_name",
+        "phone_number",
         "user_type",
         "linked_professional",
         "is_staff",
@@ -27,7 +28,15 @@ class UserAdmin(BaseUserAdmin):
         (None, {"fields": ("email", "password")}),
         (
             "Personal info",
-            {"fields": ("first_name", "last_name", "user_type", "linked_professional")},
+            {
+                "fields": (
+                    "first_name",
+                    "last_name",
+                    "phone_number",
+                    "user_type",
+                    "linked_professional",
+                )
+            },
         ),
         (
             "Permissions",
@@ -52,6 +61,9 @@ class UserAdmin(BaseUserAdmin):
                     "email",
                     "password1",
                     "password2",
+                    "first_name",
+                    "last_name",
+                    "phone_number",
                     "user_type",
                     "linked_professional",
                     "is_staff",
