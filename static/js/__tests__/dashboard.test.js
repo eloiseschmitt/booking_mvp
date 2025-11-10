@@ -61,6 +61,18 @@ const buildDom = () => {
       </div>
     </div>
 
+    <div class="kitlast-modal" data-client-modal hidden data-testid="client-modal">
+      <div class="kitlast-modal__overlay" data-modal-close></div>
+      <div class="kitlast-modal__content">
+        <form>
+          <input type="text" />
+          <button type="button" data-modal-close>×</button>
+        </form>
+      </div>
+    </div>
+
+    <button data-open-client-modal data-testid="open-client-modal">Ajouter un client</button>
+
     <div class="kitlast-planner__columns"></div>
     <button data-planner-action="today"></button>
     <button data-planner-action="day"></button>
@@ -95,5 +107,14 @@ describe('dashboard.js modals', () => {
 
     overlay.click();
     expect(serviceModal.hasAttribute('hidden')).toBe(true);
+  });
+
+  test('client modal opens from button click', () => {
+    const clientModal = document.querySelector('[data-testid="client-modal"]');
+    const openButton = document.querySelector('[data-open-client-modal]');
+
+    expect(clientModal.hasAttribute('hidden')).toBe(true);
+    openButton.click();
+    expect(clientModal.hasAttribute('hidden')).toBe(false);
   });
 });

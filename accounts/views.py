@@ -8,8 +8,9 @@ from django.db.models import Prefetch
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
+from django.utils.crypto import get_random_string
 
-from .forms import CategoryForm, ServiceForm
+from .forms import CategoryForm, ClientForm, ServiceForm
 from .models import Calendar, Category, Service, Workshop
 from .planning import PLANNER_HOURS, build_calendar_events
 from .services import delete_service, prepare_service_form, save_service_form
@@ -26,7 +27,14 @@ def dashboard(request):
     categories = Category.objects.none()
     category_form = CategoryForm()
     service_form = ServiceForm()
+    client_initial = (
+        {"linked_professional": request.user.pk}
+        if request.user.is_authenticated
+        else None
+    )
+    client_form = ClientForm(initial=client_initial)
     show_service_form = request.GET.get("show") == "service-form"
+    show_client_modal = False
     service_id_param = request.GET.get("service_id")
     category_for_new_service = request.GET.get("category")
 
@@ -74,6 +82,25 @@ def dashboard(request):
                 delete_service(service_id)
             redirect_url = f"{reverse('dashboard')}?section=services"
             return redirect(redirect_url)
+        elif action == "add_client":
+            section = "clients"
+            show_client_modal = True
+            client_data = request.POST.copy()
+            client_data["linked_professional"] = request.user.pk
+            client_form = ClientForm(client_data)
+            if request.user.is_professional:
+                if client_form.is_valid():
+                    client = client_form.save(commit=False)
+                    client.user_type = User.UserType.INDIVIDUAL
+                    client.linked_professional = request.user
+                    client.set_password(get_random_string(12))
+                    client.save()
+                    redirect_url = f"{reverse('dashboard')}?section=clients"
+                    return redirect(redirect_url)
+            else:
+                client_form.add_error(
+                    None, "Vous devez être un professionnel pour ajouter un client."
+                )
         else:
             section = "overview"
 
@@ -133,6 +160,8 @@ def dashboard(request):
         "service_form": service_form,
         "show_service_form": show_service_form,
         "show_service_modal": show_service_form or bool(service_form.errors),
+        "client_form": client_form,
+        "show_client_modal": show_client_modal or bool(client_form.errors),
         "planner_hours": PLANNER_HOURS,
         "planning_days": build_calendar_events(calendar, week_offset=week_offset),
         "week_offset": week_offset,

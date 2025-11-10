@@ -1,8 +1,11 @@
-"""Forms for manipulating categories and services."""
+"""Forms for manipulating categories, services, and clients."""
 
 from django import forms
+from django.contrib.auth import get_user_model
 
 from .models import Category, Service
+
+User = get_user_model()
 
 
 class CategoryForm(forms.ModelForm):
@@ -97,3 +100,30 @@ class ServiceForm(forms.ModelForm):
         if duration is not None and duration < 0:
             raise forms.ValidationError("La durée doit être positive.")
         return duration
+
+
+class ClientForm(forms.ModelForm):
+    """Form used to create customers linked to a professional."""
+
+    class Meta:
+        model = User
+        fields = ["first_name", "last_name", "email", "phone_number", "linked_professional"]
+        labels = {
+            "first_name": "Prénom",
+            "last_name": "Nom",
+            "email": "Email",
+            "phone_number": "Téléphone",
+        }
+        widgets = {
+            "first_name": forms.TextInput(attrs={"class": "kitlast-input"}),
+            "last_name": forms.TextInput(attrs={"class": "kitlast-input"}),
+            "email": forms.EmailInput(attrs={"class": "kitlast-input"}),
+            "phone_number": forms.TextInput(attrs={"class": "kitlast-input"}),
+            "linked_professional": forms.HiddenInput(),
+        }
+
+    def clean_email(self):
+        email = self.cleaned_data["email"].lower()
+        if User.objects.filter(email=email).exists():
+            raise forms.ValidationError("Un utilisateur avec cet email existe déjà.")
+        return email

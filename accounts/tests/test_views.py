@@ -123,6 +123,61 @@ class DashboardViewTests(TestCase):
         self.assertEqual(len(clients), 1)
         self.assertEqual(clients[0]["email"], self.client_user.email)
 
+    def test_dashboard_post_add_client_creates_linked_user(self):
+        self.login()
+        payload = {
+            "action": "add_client",
+            "first_name": "Nora",
+            "last_name": "New",
+            "email": "nora@example.com",
+            "phone_number": "0600000000",
+        }
+
+        response = self.client.post(self.url, payload)
+
+        self.assertRedirects(response, f"{self.url}?section=clients")
+        created = User.objects.get(email="nora@example.com")
+        self.assertEqual(created.linked_professional, self.user)
+        self.assertEqual(created.user_type, User.UserType.INDIVIDUAL)
+
+
+class DashboardViewIndividualTests(TestCase):
+    def setUp(self):
+        self.professional = User.objects.create_user(
+            email="pro-owner@example.com",
+            password="safe-password",
+            user_type=User.UserType.PROFESSIONAL,
+        )
+        self.user = User.objects.create_user(
+            email="client-owner@example.com",
+            password="safe-password",
+            user_type=User.UserType.INDIVIDUAL,
+            linked_professional=self.professional,
+        )
+        self.url = reverse("dashboard")
+
+    def login(self):
+        logged_in = self.client.login(email=self.user.email, password="safe-password")
+        self.assertTrue(logged_in)
+
+    def test_add_client_denied_for_individuals(self):
+        self.login()
+
+        response = self.client.post(
+            self.url,
+            {
+                "action": "add_client",
+                "first_name": "Test",
+                "last_name": "User",
+                "email": "new@example.com",
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        form = response.context["client_form"]
+        self.assertTrue(form.errors)
+        self.assertFalse(User.objects.filter(email="new@example.com").exists())
+
     def test_dashboard_lists_only_services_created_by_user(self):
         self.login()
         own_category = Category.objects.create(name="Massages détente")

@@ -10,6 +10,7 @@ const initializeDashboard = () => {
   const serviceModal = document.querySelector('[data-service-modal]');
   const eventModal = document.querySelector('[data-event-modal]');
   const newEventModal = document.querySelector('[data-new-event-modal]');
+  const clientModal = document.querySelector('[data-client-modal]');
   const categoryFormField = categoryModal ? categoryModal.querySelector('input[type="text"]') : null;
   const serviceNameField = serviceModal ? serviceModal.querySelector('input[name="name"]') : null;
   const eventFieldMap = eventModal
@@ -133,6 +134,7 @@ const initializeDashboard = () => {
   const serviceModalHandlers = attachModalHandlers(serviceModal, serviceNameField);
   const eventModalHandlers = attachModalHandlers(eventModal);
   const newEventModalHandlers = attachModalHandlers(newEventModal);
+  const clientModalHandlers = attachModalHandlers(clientModal);
 
   const setActiveSection = (sectionName) => {
     if (!sectionContainer) return;
@@ -149,6 +151,7 @@ const initializeDashboard = () => {
       closeModal(serviceModal);
       closeModal(eventModal);
       closeModal(newEventModal);
+      closeModal(clientModal);
     }
     syncUrl();
   };
@@ -187,6 +190,9 @@ const initializeDashboard = () => {
     if (newEventModal && !newEventModal.hasAttribute('hidden')) {
       closeModal(newEventModal);
     }
+    if (clientModal && !clientModal.hasAttribute('hidden')) {
+      closeModal(clientModal);
+    }
   });
 
   document.addEventListener(
@@ -195,9 +201,9 @@ const initializeDashboard = () => {
       const target = event.target;
       if (!(target instanceof Element)) {
         return;
-      }
-      const modalContainer = target.closest('.kitlast-modal');
-      const explicitCloser = target.closest('[data-modal-close]');
+    }
+    const modalContainer = target.closest('.kitlast-modal');
+    const explicitCloser = target.closest('[data-modal-close]');
 
       if (explicitCloser && modalContainer) {
         event.preventDefault();
@@ -430,6 +436,13 @@ const initializeDashboard = () => {
       }
     }
   }
+
+  document.querySelectorAll('[data-open-client-modal]').forEach((button) => {
+    button.addEventListener('click', (event) => {
+      event.preventDefault();
+      clientModalHandlers?.open();
+    });
+  });
 };
 
 document.addEventListener('DOMContentLoaded', () => {

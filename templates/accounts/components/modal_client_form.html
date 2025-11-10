@@ -1,0 +1,50 @@
+<form method="post" action="{% url 'dashboard' %}?section=clients" class="kitlast-modal__form">
+  {% csrf_token %}
+  <input type="hidden" name="action" value="add_client">
+  {{ client_form.linked_professional }}
+  {% if client_form.non_field_errors %}
+  <div class="kitlast-field__errors">
+    {% for error in client_form.non_field_errors %}{{ error }}{% endfor %}
+  </div>
+  {% endif %}
+  <div class="kitlast-field">
+    {{ client_form.first_name.label_tag }}
+    {{ client_form.first_name }}
+    {% if client_form.first_name.errors %}
+    <div class="kitlast-field__errors">
+      {% for error in client_form.first_name.errors %}{{ error }}{% endfor %}
+    </div>
+    {% endif %}
+  </div>
+  <div class="kitlast-field">
+    {{ client_form.last_name.label_tag }}
+    {{ client_form.last_name }}
+    {% if client_form.last_name.errors %}
+    <div class="kitlast-field__errors">
+      {% for error in client_form.last_name.errors %}{{ error }}{% endfor %}
+    </div>
+    {% endif %}
+  </div>
+  <div class="kitlast-field">
+    {{ client_form.email.label_tag }}
+    {{ client_form.email }}
+    {% if client_form.email.errors %}
+    <div class="kitlast-field__errors">
+      {% for error in client_form.email.errors %}{{ error }}{% endfor %}
+    </div>
+    {% endif %}
+  </div>
+  <div class="kitlast-field">
+    {{ client_form.phone_number.label_tag }}
+    {{ client_form.phone_number }}
+    {% if client_form.phone_number.errors %}
+    <div class="kitlast-field__errors">
+      {% for error in client_form.phone_number.errors %}{{ error }}{% endfor %}
+    </div>
+    {% endif %}
+  </div>
+  <div class="kitlast-modal__actions">
+    <button type="button" class="kitlast-button kitlast-button--ghost" data-modal-close>Annuler</button>
+    <button type="submit" class="kitlast-button">Enregistrer</button>
+  </div>
+</form>
