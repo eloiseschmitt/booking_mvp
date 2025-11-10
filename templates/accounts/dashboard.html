@@ -83,14 +83,7 @@
 
         {% include "accounts/dashboard_planning.html" %}
 
-        <section class="kitlast-content-section{% if section == 'clients' %} is-active{% endif %}"
-          data-section="clients">
-          <article class="kitlast-panel-card">
-            <h2>Gestion des clients</h2>
-            <p class="kitlast-panel-card__text">Retrouvez l'historique de vos clients, leurs préférences et facilitez
-              vos échanges pour fidéliser votre communauté.</p>
-          </article>
-        </section>
+        {% include "accounts/dashboard_clients.html" %}
       </div>
     </div>
   </section>

@@ -16,14 +16,19 @@ class UserAdmin(BaseUserAdmin):
         "first_name",
         "last_name",
         "user_type",
+        "linked_professional",
         "is_staff",
         "is_active",
     )
+    list_filter = ("user_type", "is_staff", "is_active")
     search_fields = ("email", "first_name", "last_name")
 
     fieldsets = (
         (None, {"fields": ("email", "password")}),
-        ("Personal info", {"fields": ("first_name", "last_name", "user_type")}),
+        (
+            "Personal info",
+            {"fields": ("first_name", "last_name", "user_type", "linked_professional")},
+        ),
         (
             "Permissions",
             {
@@ -48,6 +53,7 @@ class UserAdmin(BaseUserAdmin):
                     "password1",
                     "password2",
                     "user_type",
+                    "linked_professional",
                     "is_staff",
                     "is_superuser",
                     "is_active",

@@ -2,6 +2,7 @@
 
 from django.contrib.auth.base_user import AbstractBaseUser, BaseUserManager
 from django.contrib.auth.models import PermissionsMixin
+from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils import timezone
 
@@ -55,6 +56,14 @@ class User(AbstractBaseUser, PermissionsMixin):
         choices=UserType.choices,
         default=UserType.INDIVIDUAL,
     )
+    linked_professional = models.ForeignKey(
+        "self",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="linked_users",
+        limit_choices_to={"user_type": UserType.PROFESSIONAL},
+    )
 
     objects = UserManager()
 
@@ -68,3 +77,30 @@ class User(AbstractBaseUser, PermissionsMixin):
     def is_professional(self):
         """Return whether the user is a professional."""
         return self.user_type == self.UserType.PROFESSIONAL
+
+    def clean(self):
+        super().clean()
+        if self.user_type == self.UserType.INDIVIDUAL:
+            if not self.linked_professional:
+                raise ValidationError(
+                    {
+                        "linked_professional": "Un particulier doit être rattaché à un professionnel."
+                    }
+                )
+            if self.linked_professional.user_type != self.UserType.PROFESSIONAL:
+                raise ValidationError(
+                    {
+                        "linked_professional": "Le compte associé doit être professionnel."
+                    }
+                )
+        elif (
+            self.linked_professional
+            and self.linked_professional.user_type != self.UserType.PROFESSIONAL
+        ):
+            raise ValidationError(
+                {"linked_professional": "Le compte associé doit être professionnel."}
+            )
+
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        return super().save(*args, **kwargs)

@@ -22,6 +22,14 @@ class DashboardViewTests(TestCase):
             password="safe-password",
             user_type=User.UserType.PROFESSIONAL,
         )
+        self.client_user = User.objects.create_user(
+            email="client@example.com",
+            password="safe-password",
+            first_name="Clara",
+            last_name="Client",
+            user_type=User.UserType.INDIVIDUAL,
+            linked_professional=self.user,
+        )
         self.url = reverse("dashboard")
 
     def login(self):
@@ -53,6 +61,11 @@ class DashboardViewTests(TestCase):
         self.assertFalse(response.context["show_category_form"])
         self.assertFalse(response.context["show_service_form"])
         self.assertEqual(response.context["planner_hours"], PLANNER_HOURS)
+        self.assertIn("clients", response.context)
+        self.assertEqual(len(response.context["clients"]), 1)
+        self.assertEqual(
+            response.context["clients"][0]["email"], self.client_user.email
+        )
         planning_days = response.context["planning_days"]
         self.assertIsInstance(planning_days, list)
         self.assertGreaterEqual(len(planning_days), 1)
@@ -75,6 +88,40 @@ class DashboardViewTests(TestCase):
         self.assertEqual(response.context["service_form"], mock_form)
         self.assertTrue(response.context["show_service_form"])
         self.assertEqual(response.context["section"], "services")
+
+    def test_dashboard_clients_table_lists_individuals(self):
+        self.login()
+
+        response = self.client.get(self.url, {"section": "clients"})
+
+        self.assertEqual(response.status_code, 200)
+        clients = response.context["clients"]
+        self.assertEqual(len(clients), 1)
+        self.assertEqual(clients[0]["full_name"], "Clara Client")
+        self.assertEqual(clients[0]["phone"], "—")
+        self.assertEqual(clients[0]["email"], self.client_user.email)
+
+    def test_dashboard_clients_table_shows_only_linked_clients(self):
+        self.login()
+        other_pro = User.objects.create_user(
+            email="other-pro@example.com",
+            password="safe-password",
+            user_type=User.UserType.PROFESSIONAL,
+        )
+        User.objects.create_user(
+            email="other-client@example.com",
+            password="safe-password",
+            first_name="Olivia",
+            last_name="Other",
+            user_type=User.UserType.INDIVIDUAL,
+            linked_professional=other_pro,
+        )
+
+        response = self.client.get(self.url, {"section": "clients"})
+
+        clients = response.context["clients"]
+        self.assertEqual(len(clients), 1)
+        self.assertEqual(clients[0]["email"], self.client_user.email)
 
     def test_dashboard_lists_only_services_created_by_user(self):
         self.login()
@@ -236,6 +283,7 @@ class LogoutViewTests(TestCase):
         self.user = User.objects.create_user(
             email="member@example.com",
             password="safe-password",
+            user_type=User.UserType.PROFESSIONAL,
         )
         self.url = "/logout/"
 
@@ -266,6 +314,7 @@ class WorkshopDetailViewTests(TestCase):
         self.user = User.objects.create_user(
             email="creator@example.com",
             password="safe-password",
+            user_type=User.UserType.PROFESSIONAL,
         )
         self.service = Service.objects.create(
             category=self.category,

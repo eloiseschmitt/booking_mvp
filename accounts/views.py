@@ -2,7 +2,7 @@
 
 from datetime import timedelta
 
-from django.contrib.auth import logout
+from django.contrib.auth import get_user_model, logout
 from django.contrib.auth.decorators import login_required
 from django.db.models import Prefetch
 from django.shortcuts import get_object_or_404, redirect, render
@@ -13,6 +13,8 @@ from .forms import CategoryForm, ServiceForm
 from .models import Calendar, Category, Service, Workshop
 from .planning import PLANNER_HOURS, build_calendar_events
 from .services import delete_service, prepare_service_form, save_service_form
+
+User = get_user_model()
 
 
 @login_required
@@ -76,6 +78,7 @@ def dashboard(request):
             section = "overview"
 
     calendar = None
+    clients: list[dict[str, str]] = []
     if request.user.is_authenticated:
         calendar = Calendar.objects.filter(owner=request.user).first()
         if calendar is None:
@@ -89,6 +92,20 @@ def dashboard(request):
             .distinct()
         )
         user_services = list(user_service_qs)
+        if request.user.user_type == User.UserType.PROFESSIONAL:
+            clients = [
+                {
+                    "id": client.pk,
+                    "full_name": (f"{client.first_name} {client.last_name}".strip())
+                    or client.email,
+                    "email": client.email,
+                    "phone": getattr(client, "phone_number", "") or "—",
+                }
+                for client in User.objects.filter(
+                    user_type=User.UserType.INDIVIDUAL,
+                    linked_professional=request.user,
+                ).order_by("first_name", "last_name", "email")
+            ]
     else:
         user_services = []
 
@@ -121,6 +138,7 @@ def dashboard(request):
         "week_offset": week_offset,
         "planner_week_summary": planner_week_summary,
         "user_services": user_services,
+        "clients": clients,
     }
     return render(request, "accounts/dashboard.html", context)
 

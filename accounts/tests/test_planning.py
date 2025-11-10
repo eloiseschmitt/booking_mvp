@@ -32,6 +32,7 @@ class BuildCalendarEventsTests(TestCase):
         self.user = get_user_model().objects.create_user(
             email="planner@example.com",
             password="safe-password",
+            user_type=get_user_model().UserType.PROFESSIONAL,
         )
 
     def test_empty_calendar_returns_empty_week(self):
