@@ -70,6 +70,7 @@ def _initialize_dashboard_state(request):
 
 
 def _handle_add_category(request, state):
+    """Process category creation and toggle modal visibility."""
     state["section"] = "services"
     state["show_category_form"] = True
     state["category_form"] = CategoryForm(request.POST)
@@ -80,6 +81,7 @@ def _handle_add_category(request, state):
 
 
 def _handle_add_service(request, state):
+    """Persist a new service and reopen the modal when invalid."""
     state["section"] = "services"
     state["show_service_form"] = True
     form = ServiceForm(request.POST)
@@ -91,6 +93,7 @@ def _handle_add_service(request, state):
 
 
 def _handle_update_service(request, state):
+    """Update an existing service with submitted data."""
     state["section"] = "services"
     state["show_service_form"] = True
     service_id = _safe_int(request.POST.get("service_id"))
@@ -103,6 +106,7 @@ def _handle_update_service(request, state):
 
 
 def _handle_delete_service(request, state):
+    """Remove a service and refresh the services section."""
     state["section"] = "services"
     service_id = _safe_int(request.POST.get("service_id"))
     if service_id:
@@ -111,6 +115,7 @@ def _handle_delete_service(request, state):
 
 
 def _handle_add_client(request, state):
+    """Create a new client for the professional, enforcing permissions."""
     state["section"] = "clients"
     state["show_client_modal"] = True
     client_data = request.POST.copy()
@@ -134,6 +139,7 @@ def _handle_add_client(request, state):
 
 
 def _handle_add_event(request, state):
+    """Create a calendar event from the planning modal."""
     state["section"] = "planning"
     if not request.user.is_authenticated:
         return redirect("login")
@@ -170,6 +176,7 @@ def _handle_add_event(request, state):
 
 
 def _dispatch_dashboard_action(request, state) -> HttpResponse | None:
+    """Invoke the handler that matches the submitted dashboard action."""
     action = request.POST.get("action")
     handler = DASHBOARD_ACTION_HANDLERS.get(action)
     if handler:
