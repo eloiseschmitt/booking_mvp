@@ -1,12 +1,12 @@
 """Tests for planning helpers."""
 
-from datetime import timedelta
+from datetime import datetime, time, timedelta
 
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.utils import timezone
 
-from accounts.models import Calendar
+from accounts.models import Calendar, Category, Service
 from accounts.planning import _compute_block, build_calendar_events
 
 
@@ -77,3 +77,58 @@ class BuildCalendarEventsTests(TestCase):
 
         self.assertEqual(sum(len(day["events"]) for day in this_week), 1)
         self.assertEqual(sum(len(day["events"]) for day in next_week), 1)
+
+    def test_missing_calendar_returns_sample_week(self):
+        """When no calendar is provided the fallback sample data is returned."""
+
+        data = build_calendar_events(calendar=None)
+
+        self.assertEqual(len(data), 7)
+        self.assertTrue(any(day["events"] for day in data))
+        sample_event = next(event for day in data for event in day["events"])
+        self.assertIn("title", sample_event)
+        self.assertIn("start", sample_event)
+
+    def test_event_includes_service_and_author_metadata(self):
+        """Service/category lookup enriches planner events."""
+
+        calendar = Calendar.objects.create(
+            owner=self.user,
+            name="Professional agenda",
+            slug="pro-agenda",
+        )
+        category = Category.objects.create(name="Retouches")
+        service = Service.objects.create(
+            category=category,
+            name="Our Service",
+            description="Top service",
+            created_by=self.user,
+        )
+        self.user.first_name = "Romy"
+        self.user.last_name = "Ford"
+        self.user.save()
+
+        start = timezone.make_aware(
+            datetime.combine(timezone.localdate(), time(hour=9, minute=0)),
+            timezone.get_current_timezone(),
+        )
+        calendar.events.create(
+            title=service.name,
+            description="Detailed description",
+            start_at=start,
+            end_at=start + timedelta(hours=1),
+            status="confirmed",
+            created_by=self.user,
+        )
+
+        data = build_calendar_events(calendar)
+        event = next(day["events"][0] for day in data if day["events"])
+
+        self.assertEqual(event["service"], service.name)
+        self.assertEqual(event["category"], category.name)
+        self.assertEqual(event["created_by"], "Romy Ford")
+        self.assertIn("Romy Ford", event["title"])
+        self.assertEqual(event["status"], "Confirmed")
+        self.assertTrue(event["time"].startswith("09:00"))
+        self.assertIn("start", event)
+        self.assertIn("top_pct", event)

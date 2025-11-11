@@ -44,7 +44,7 @@ jobs:
         run: pylint accounts booking_mvp users
 
       - name: Jest
-        run: npm test -- --runInBand
+        run: npm test -- --runInBand --coverage
 
       - name: Tests & Coverage
         env:
@@ -60,6 +60,10 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "18"
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
@@ -68,6 +72,9 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install django coverage
+          npm install
+      - name: Jest (coverage)
+        run: npm test -- --runInBand --coverage
       - name: Tests & Coverage
         env:
           DJANGO_SETTINGS_MODULE: booking_mvp.settings
