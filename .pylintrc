@@ -1,6 +1,7 @@
 [MASTER]
 ignore = migrations
 ignore-patterns = migrations/.*,migrations$
+ignore-paths = .*/migrations/.*
 
 [MESSAGES CONTROL]
 disable =

@@ -1,5 +1,7 @@
 """Add link between individual users and professionals."""
 
+# pylint: disable=invalid-name
+
 from django.conf import settings
 from django.db import migrations, models
 import django.db.models.deletion

@@ -105,7 +105,10 @@ class ServiceForm(forms.ModelForm):
 class ClientForm(forms.ModelForm):
     """Form used to create customers linked to a professional."""
 
+    # pylint: disable=too-few-public-methods
     class Meta:
+        """Configuration for the client form."""
+
         model = User
         fields = [
             "first_name",
@@ -129,6 +132,7 @@ class ClientForm(forms.ModelForm):
         }
 
     def clean_email(self):
+        """Reject duplicate email addresses."""
         email = self.cleaned_data["email"].lower()
         if User.objects.filter(email=email).exists():
             raise forms.ValidationError("Un utilisateur avec cet email existe déjà.")

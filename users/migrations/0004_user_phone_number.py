@@ -1,5 +1,7 @@
 """Add phone number field to user."""
 
+# pylint: disable=invalid-name
+
 from django.db import migrations, models
 
 

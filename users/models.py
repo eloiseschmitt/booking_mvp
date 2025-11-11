@@ -85,7 +85,9 @@ class User(AbstractBaseUser, PermissionsMixin):
             if not self.linked_professional:
                 raise ValidationError(
                     {
-                        "linked_professional": "Un particulier doit être rattaché à un professionnel."
+                        "linked_professional": (
+                            "Un particulier doit être rattaché à un professionnel."
+                        )
                     }
                 )
             if self.linked_professional.user_type != self.UserType.PROFESSIONAL:

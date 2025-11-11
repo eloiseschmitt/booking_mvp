@@ -27,6 +27,7 @@ def dashboard(request):
     section = request.GET.get("section", "overview")
     show_category_form = request.GET.get("show") == "category-form"
     categories = Category.objects.none()
+    calendar = None
     category_form = CategoryForm()
     service_form = ServiceForm()
     client_initial = (
@@ -49,6 +50,7 @@ def dashboard(request):
             service_form = ServiceForm(initial={"category": category_for_new_service})
             section = "services"
 
+    redirect_response = None
     if request.method == "POST":
         action = request.POST.get("action")
         if action == "add_category":
@@ -57,24 +59,21 @@ def dashboard(request):
             show_category_form = True
             if category_form.is_valid():
                 category_form.save()
-                redirect_url = f"{reverse('dashboard')}?section=services"
-                return redirect(redirect_url)
+                redirect_response = redirect(f"{reverse('dashboard')}?section=services")
         elif action == "add_service":
             section = "services"
             service_form = ServiceForm(request.POST)
             show_service_form = True
             success, service_form = save_service_form(service_form, user=request.user)
             if success:
-                redirect_url = f"{reverse('dashboard')}?section=services"
-                return redirect(redirect_url)
+                redirect_response = redirect(f"{reverse('dashboard')}?section=services")
         elif action == "update_service":
             section = "services"
             service_id = request.POST.get("service_id")
             form, _ = prepare_service_form(service_id, data=request.POST)
             success, form = save_service_form(form)
             if success:
-                redirect_url = f"{reverse('dashboard')}?section=services"
-                return redirect(redirect_url)
+                redirect_response = redirect(f"{reverse('dashboard')}?section=services")
             show_service_form = True
             service_form = form
         elif action == "delete_service":
@@ -82,8 +81,7 @@ def dashboard(request):
             service_id = request.POST.get("service_id")
             if service_id:
                 delete_service(service_id)
-            redirect_url = f"{reverse('dashboard')}?section=services"
-            return redirect(redirect_url)
+            redirect_response = redirect(f"{reverse('dashboard')}?section=services")
         elif action == "add_client":
             section = "clients"
             show_client_modal = True
@@ -97,8 +95,9 @@ def dashboard(request):
                     client.linked_professional = request.user
                     client.set_password(get_random_string(12))
                     client.save()
-                    redirect_url = f"{reverse('dashboard')}?section=clients"
-                    return redirect(redirect_url)
+                    redirect_response = redirect(
+                        f"{reverse('dashboard')}?section=clients"
+                    )
             else:
                 client_form.add_error(
                     None, "Vous devez être un professionnel pour ajouter un client."
@@ -106,8 +105,8 @@ def dashboard(request):
         elif action == "add_event":
             section = "planning"
             if not request.user.is_authenticated:
-                return redirect("login")
-            if not request.user.is_professional:
+                redirect_response = redirect("login")
+            elif not request.user.is_professional:
                 messages.error(
                     request,
                     "Vous devez être un professionnel pour planifier un rendez-vous.",
@@ -127,12 +126,18 @@ def dashboard(request):
                         request.user, calendar, start_at_raw, service_id, client_id
                     )
                     if event_created:
-                        return redirect(f"{reverse('dashboard')}?section=planning")
-                    messages.error(
-                        request,
-                        "Impossible de créer le rendez-vous. Vérifiez les informations fournies.",
-                    )
-    calendar = None
+                        redirect_response = redirect(
+                            f"{reverse('dashboard')}?section=planning"
+                        )
+                    else:
+                        messages.error(
+                            request,
+                            "Impossible de créer le rendez-vous. "
+                            "Vérifiez les informations fournies.",
+                        )
+    if redirect_response:
+        return redirect_response
+
     clients: list[dict[str, str]] = []
     client_options: list[dict[str, str]] = []
     user_services = []
