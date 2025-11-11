@@ -167,22 +167,29 @@ def _build_event_view(
     )
 
 
-def _group_event_views(event_views: list[EventView]) -> list[dict[str, object]]:
-    """Group event views by day for easier template consumption."""
+def _group_event_views(
+    event_views: list[EventView], start_of_week: date
+) -> list[dict[str, object]]:
+    """Group event views by day and include empty days for the full week."""
 
     grouped: dict[tuple[str, str], list[EventView]] = defaultdict(list)
     for view in sorted(event_views, key=lambda item: item.start):
         grouped[(view.label, view.date)].append(view)
 
-    ordered_groups = sorted(grouped.items(), key=lambda item: item[1][0].start)
-    return [
-        {
-            "label": label,
-            "date": event_date,
-            "events": [view._asdict() for view in views],
-        }
-        for (label, event_date), views in ordered_groups
-    ]
+    merged: list[dict[str, object]] = []
+    for index in range(7):
+        current_day = start_of_week + timedelta(days=index)
+        label = _weekday_label(datetime.combine(current_day, time.min))
+        date_label = current_day.strftime("%d/%m")
+        views = grouped.get((label, date_label), [])
+        merged.append(
+            {
+                "label": label,
+                "date": date_label,
+                "events": [view._asdict() for view in views],
+            }
+        )
+    return merged
 
 
 def build_calendar_events(
@@ -212,4 +219,4 @@ def build_calendar_events(
         _build_event_view(event, index, service_lookup)
         for index, event in enumerate(queryset)
     ]
-    return _group_event_views(event_views)
+    return _group_event_views(event_views, start_of_week)
