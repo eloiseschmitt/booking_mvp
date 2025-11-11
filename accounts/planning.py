@@ -178,10 +178,10 @@ def _group_event_views(event_views: list[EventView]) -> list[dict[str, object]]:
     return [
         {
             "label": label,
-            "date": date,
+            "date": event_date,
             "events": [view._asdict() for view in views],
         }
-        for (label, date), views in ordered_groups
+        for (label, event_date), views in ordered_groups
     ]
 
 

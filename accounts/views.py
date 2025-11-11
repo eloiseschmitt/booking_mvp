@@ -6,6 +6,7 @@ from django.contrib import messages
 from django.contrib.auth import get_user_model, logout
 from django.contrib.auth.decorators import login_required
 from django.db.models import Prefetch
+from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
@@ -13,21 +14,28 @@ from django.utils.crypto import get_random_string
 
 from .forms import CategoryForm, ClientForm, ServiceForm
 from .models import Category, Event, EventAttendee, Service, Workshop
-from .utils import ensure_user_calendar
 from .planning import PLANNER_HOURS, build_calendar_events
 from .services import delete_service, prepare_service_form, save_service_form
+from .utils import ensure_user_calendar
 
 User = get_user_model()
 
 
-@login_required
-def dashboard(request):
-    """Render the dashboard and handle service/category management."""
-    # pylint: disable=too-many-branches,too-many-statements,too-many-locals
+def _safe_int(value: str | None) -> int | None:
+    """Return an int for the provided string, or None when invalid."""
+
+    try:
+        return int(value) if value is not None else None
+    except (TypeError, ValueError):
+        return None
+
+
+def _initialize_dashboard_state(request):
+    """Prepare base state (forms, flags) for the dashboard view."""
+
     section = request.GET.get("section", "overview")
     show_category_form = request.GET.get("show") == "category-form"
-    categories = Category.objects.none()
-    calendar = None
+    show_service_form = request.GET.get("show") == "service-form"
     category_form = CategoryForm()
     service_form = ServiceForm()
     client_initial = (
@@ -36,9 +44,8 @@ def dashboard(request):
         else None
     )
     client_form = ClientForm(initial=client_initial)
-    show_service_form = request.GET.get("show") == "service-form"
-    show_client_modal = False
-    service_id_param = request.GET.get("service_id")
+
+    service_id_param = _safe_int(request.GET.get("service_id"))
     category_for_new_service = request.GET.get("category")
 
     if service_id_param:
@@ -50,94 +57,130 @@ def dashboard(request):
             service_form = ServiceForm(initial={"category": category_for_new_service})
             section = "services"
 
-    redirect_response = None
-    if request.method == "POST":
-        action = request.POST.get("action")
-        if action == "add_category":
-            section = "services"
-            category_form = CategoryForm(request.POST)
-            show_category_form = True
-            if category_form.is_valid():
-                category_form.save()
-                redirect_response = redirect(f"{reverse('dashboard')}?section=services")
-        elif action == "add_service":
-            section = "services"
-            service_form = ServiceForm(request.POST)
-            show_service_form = True
-            success, service_form = save_service_form(service_form, user=request.user)
-            if success:
-                redirect_response = redirect(f"{reverse('dashboard')}?section=services")
-        elif action == "update_service":
-            section = "services"
-            service_id = request.POST.get("service_id")
-            form, _ = prepare_service_form(service_id, data=request.POST)
-            success, form = save_service_form(form)
-            if success:
-                redirect_response = redirect(f"{reverse('dashboard')}?section=services")
-            show_service_form = True
-            service_form = form
-        elif action == "delete_service":
-            section = "services"
-            service_id = request.POST.get("service_id")
-            if service_id:
-                delete_service(service_id)
-            redirect_response = redirect(f"{reverse('dashboard')}?section=services")
-        elif action == "add_client":
-            section = "clients"
-            show_client_modal = True
-            client_data = request.POST.copy()
-            client_data["linked_professional"] = request.user.pk
-            client_form = ClientForm(client_data)
-            if request.user.is_professional:
-                if client_form.is_valid():
-                    client = client_form.save(commit=False)
-                    client.user_type = User.UserType.INDIVIDUAL
-                    client.linked_professional = request.user
-                    client.set_password(get_random_string(12))
-                    client.save()
-                    redirect_response = redirect(
-                        f"{reverse('dashboard')}?section=clients"
-                    )
-            else:
-                client_form.add_error(
-                    None, "Vous devez être un professionnel pour ajouter un client."
-                )
-        elif action == "add_event":
-            section = "planning"
-            if not request.user.is_authenticated:
-                redirect_response = redirect("login")
-            elif not request.user.is_professional:
-                messages.error(
-                    request,
-                    "Vous devez être un professionnel pour planifier un rendez-vous.",
-                )
-            else:
-                calendar = ensure_user_calendar(request.user)
-                start_at_raw = request.POST.get("start_at")
-                service_id = request.POST.get("service_id")
-                client_id = request.POST.get("client_id")
-                if not (start_at_raw and service_id and client_id):
-                    messages.error(
-                        request,
-                        "Veuillez sélectionner un horaire, une prestation et un client.",
-                    )
-                else:
-                    event_created = _create_event_from_form(
-                        request.user, calendar, start_at_raw, service_id, client_id
-                    )
-                    if event_created:
-                        redirect_response = redirect(
-                            f"{reverse('dashboard')}?section=planning"
-                        )
-                    else:
-                        messages.error(
-                            request,
-                            "Impossible de créer le rendez-vous. "
-                            "Vérifiez les informations fournies.",
-                        )
-    if redirect_response:
-        return redirect_response
+    return {
+        "section": section,
+        "category_form": category_form,
+        "service_form": service_form,
+        "client_form": client_form,
+        "show_category_form": show_category_form,
+        "show_service_form": show_service_form,
+        "show_client_modal": False,
+        "calendar": None,
+    }
 
+
+def _handle_add_category(request, state):
+    state["section"] = "services"
+    state["show_category_form"] = True
+    state["category_form"] = CategoryForm(request.POST)
+    if state["category_form"].is_valid():
+        state["category_form"].save()
+        return redirect(f"{reverse('dashboard')}?section=services")
+    return None
+
+
+def _handle_add_service(request, state):
+    state["section"] = "services"
+    state["show_service_form"] = True
+    form = ServiceForm(request.POST)
+    success, form = save_service_form(form, user=request.user)
+    state["service_form"] = form
+    if success:
+        return redirect(f"{reverse('dashboard')}?section=services")
+    return None
+
+
+def _handle_update_service(request, state):
+    state["section"] = "services"
+    state["show_service_form"] = True
+    service_id = _safe_int(request.POST.get("service_id"))
+    form, _ = prepare_service_form(service_id, data=request.POST)
+    success, form = save_service_form(form)
+    state["service_form"] = form
+    if success:
+        return redirect(f"{reverse('dashboard')}?section=services")
+    return None
+
+
+def _handle_delete_service(request, state):
+    state["section"] = "services"
+    service_id = _safe_int(request.POST.get("service_id"))
+    if service_id:
+        delete_service(service_id)
+    return redirect(f"{reverse('dashboard')}?section=services")
+
+
+def _handle_add_client(request, state):
+    state["section"] = "clients"
+    state["show_client_modal"] = True
+    client_data = request.POST.copy()
+    client_data["linked_professional"] = request.user.pk
+    client_form = ClientForm(client_data)
+    state["client_form"] = client_form
+    if not request.user.is_professional:
+        client_form.add_error(
+            None, "Vous devez être un professionnel pour ajouter un client."
+        )
+        return None
+
+    if client_form.is_valid():
+        client = client_form.save(commit=False)
+        client.user_type = User.UserType.INDIVIDUAL
+        client.linked_professional = request.user
+        client.set_password(get_random_string(12))
+        client.save()
+        return redirect(f"{reverse('dashboard')}?section=clients")
+    return None
+
+
+def _handle_add_event(request, state):
+    state["section"] = "planning"
+    if not request.user.is_authenticated:
+        return redirect("login")
+    if not request.user.is_professional:
+        messages.error(
+            request,
+            "Vous devez être un professionnel pour planifier un rendez-vous.",
+        )
+        return None
+
+    calendar = ensure_user_calendar(request.user)
+    state["calendar"] = calendar
+    start_at_raw = request.POST.get("start_at")
+    service_id = request.POST.get("service_id")
+    client_id = request.POST.get("client_id")
+    if not (start_at_raw and service_id and client_id):
+        messages.error(
+            request,
+            "Veuillez sélectionner un horaire, une prestation et un client.",
+        )
+        return None
+
+    event_created = _create_event_from_form(
+        request.user, calendar, start_at_raw, service_id, client_id
+    )
+    if event_created:
+        return redirect(f"{reverse('dashboard')}?section=planning")
+
+    messages.error(
+        request,
+        "Impossible de créer le rendez-vous. Vérifiez les informations fournies.",
+    )
+    return None
+
+
+def _dispatch_dashboard_action(request, state) -> HttpResponse | None:
+    action = request.POST.get("action")
+    handler = DASHBOARD_ACTION_HANDLERS.get(action)
+    if handler:
+        return handler(request, state)
+    return None
+
+
+def _build_dashboard_context(request, state):
+    """Aggregate all data needed to render the dashboard."""
+
+    calendar = state.get("calendar")
     clients: list[dict[str, str]] = []
     client_options: list[dict[str, str]] = []
     user_services = []
@@ -145,8 +188,11 @@ def dashboard(request):
         request.user.is_authenticated
         and request.user.user_type == User.UserType.PROFESSIONAL
     )
+
     if request.user.is_authenticated:
-        calendar = ensure_user_calendar(request.user)
+        if calendar is None:
+            calendar = ensure_user_calendar(request.user)
+            state["calendar"] = calendar
         user_service_qs = Service.objects.filter(created_by=request.user).order_by(
             "name"
         )
@@ -196,26 +242,53 @@ def dashboard(request):
         f"{start_of_week.strftime('%d/%m')} → {end_of_week.strftime('%d/%m')}"
     )
 
+    planning_days = build_calendar_events(calendar, week_offset=week_offset)
+
     context = {
-        "section": section,
+        "section": state["section"],
         "categories": categories,
-        "category_form": category_form,
-        "show_category_form": show_category_form,
-        "show_category_modal": show_category_form or bool(category_form.errors),
-        "service_form": service_form,
-        "show_service_form": show_service_form,
-        "show_service_modal": show_service_form or bool(service_form.errors),
-        "client_form": client_form,
-        "show_client_modal": show_client_modal or bool(client_form.errors),
+        "category_form": state["category_form"],
+        "show_category_form": state["show_category_form"],
+        "show_category_modal": state["show_category_form"]
+        or bool(state["category_form"].errors),
+        "service_form": state["service_form"],
+        "show_service_form": state["show_service_form"],
+        "show_service_modal": state["show_service_form"]
+        or bool(state["service_form"].errors),
+        "client_form": state["client_form"],
+        "show_client_modal": state["show_client_modal"]
+        or bool(state["client_form"].errors),
         "is_professional": is_professional,
         "planner_hours": PLANNER_HOURS,
-        "planning_days": build_calendar_events(calendar, week_offset=week_offset),
+        "planning_days": planning_days,
         "week_offset": week_offset,
         "planner_week_summary": planner_week_summary,
         "user_services": user_services,
         "clients": clients,
         "client_options": client_options,
     }
+    return context
+
+
+DASHBOARD_ACTION_HANDLERS = {
+    "add_category": _handle_add_category,
+    "add_service": _handle_add_service,
+    "update_service": _handle_update_service,
+    "delete_service": _handle_delete_service,
+    "add_client": _handle_add_client,
+    "add_event": _handle_add_event,
+}
+
+
+@login_required
+def dashboard(request):
+    """Render the dashboard and handle service/category management."""
+    state = _initialize_dashboard_state(request)
+    if request.method == "POST":
+        response = _dispatch_dashboard_action(request, state)
+        if response:
+            return response
+    context = _build_dashboard_context(request, state)
     return render(request, "accounts/dashboard.html", context)
 
 

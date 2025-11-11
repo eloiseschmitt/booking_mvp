@@ -24,7 +24,7 @@ class ServiceAdmin(admin.ModelAdmin):
 
     def save_model(self, request, obj, form, change):
         """Ensure the creator is preserved when saving through the admin."""
-        if not obj.created_by_id:
+        if not obj.created_by.id:
             obj.created_by = request.user
         super().save_model(request, obj, form, change)
 

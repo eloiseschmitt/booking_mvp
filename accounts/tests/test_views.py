@@ -91,7 +91,7 @@ class DashboardViewTests(TestCase):
         ) as mocked_prepare:
             response = self.client.get(self.url, {"service_id": "42"})
 
-        mocked_prepare.assert_called_once_with("42")
+        mocked_prepare.assert_called_once_with(42)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.context["service_form"], mock_form)
         self.assertTrue(response.context["show_service_form"])
