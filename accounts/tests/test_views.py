@@ -130,6 +130,18 @@ class DashboardViewTests(TestCase):
         clients = response.context["clients"]
         self.assertEqual(len(clients), 1)
         self.assertEqual(clients[0]["email"], self.client_user.email)
+        self.assertTrue(response.context["is_professional"])
+
+    def test_dashboard_clients_section_handles_empty_state(self):
+        self.login()
+        self.client_user.delete()
+
+        response = self.client.get(self.url, {"section": "clients"})
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context["clients"], [])
+        self.assertEqual(response.context["client_options"], [])
+        self.assertTrue(response.context["is_professional"])
 
     def test_dashboard_post_add_client_creates_linked_user(self):
         self.login()
@@ -241,6 +253,16 @@ class DashboardViewIndividualTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(Event.objects.count(), initial_count)
         self.assertFalse(Event.objects.filter(created_by=self.user).exists())
+        self.assertFalse(response.context["is_professional"])
+
+    def test_clients_section_for_individuals_has_no_clients(self):
+        self.login()
+
+        response = self.client.get(self.url, {"section": "clients"})
+
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(response.context["is_professional"])
+        self.assertEqual(response.context["clients"], [])
 
     def test_dashboard_lists_only_services_created_by_user(self):
         self.login()

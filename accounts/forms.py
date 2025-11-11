@@ -107,7 +107,13 @@ class ClientForm(forms.ModelForm):
 
     class Meta:
         model = User
-        fields = ["first_name", "last_name", "email", "phone_number", "linked_professional"]
+        fields = [
+            "first_name",
+            "last_name",
+            "email",
+            "phone_number",
+            "linked_professional",
+        ]
         labels = {
             "first_name": "Prénom",
             "last_name": "Nom",

@@ -5,9 +5,7 @@ from django import template
 register = template.Library()
 
 
-@register.inclusion_tag(
-    "accounts/components/modal_wrapper.html", takes_context=True
-)
+@register.inclusion_tag("accounts/components/modal_wrapper.html", takes_context=True)
 def render_modal(
     context,
     modal_data_attr,

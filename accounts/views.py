@@ -136,7 +136,10 @@ def dashboard(request):
     clients: list[dict[str, str]] = []
     client_options: list[dict[str, str]] = []
     user_services = []
-    is_professional = request.user.is_authenticated and request.user.user_type == User.UserType.PROFESSIONAL
+    is_professional = (
+        request.user.is_authenticated
+        and request.user.user_type == User.UserType.PROFESSIONAL
+    )
     if request.user.is_authenticated:
         calendar = ensure_user_calendar(request.user)
         user_service_qs = Service.objects.filter(created_by=request.user).order_by(
@@ -154,7 +157,9 @@ def dashboard(request):
                 linked_professional=request.user,
             ).order_by("first_name", "last_name", "email")
             for client in client_queryset:
-                full_name = (f"{client.first_name} {client.last_name}".strip()) or client.email
+                full_name = (
+                    f"{client.first_name} {client.last_name}".strip()
+                ) or client.email
                 client_data = {
                     "id": client.pk,
                     "full_name": full_name,
