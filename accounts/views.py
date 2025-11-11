@@ -1,7 +1,8 @@
 """Views for the accounts application."""
 
-from datetime import timedelta
+from datetime import datetime, timedelta
 
+from django.contrib import messages
 from django.contrib.auth import get_user_model, logout
 from django.contrib.auth.decorators import login_required
 from django.db.models import Prefetch
@@ -11,7 +12,8 @@ from django.utils import timezone
 from django.utils.crypto import get_random_string
 
 from .forms import CategoryForm, ClientForm, ServiceForm
-from .models import Calendar, Category, Service, Workshop
+from .models import Category, Event, EventAttendee, Service, Workshop
+from .utils import ensure_user_calendar
 from .planning import PLANNER_HOURS, build_calendar_events
 from .services import delete_service, prepare_service_form, save_service_form
 
@@ -101,15 +103,42 @@ def dashboard(request):
                 client_form.add_error(
                     None, "Vous devez être un professionnel pour ajouter un client."
                 )
-        else:
-            section = "overview"
-
+        elif action == "add_event":
+            section = "planning"
+            if not request.user.is_authenticated:
+                return redirect("login")
+            if not request.user.is_professional:
+                messages.error(
+                    request,
+                    "Vous devez être un professionnel pour planifier un rendez-vous.",
+                )
+            else:
+                calendar = ensure_user_calendar(request.user)
+                start_at_raw = request.POST.get("start_at")
+                service_id = request.POST.get("service_id")
+                client_id = request.POST.get("client_id")
+                if not (start_at_raw and service_id and client_id):
+                    messages.error(
+                        request,
+                        "Veuillez sélectionner un horaire, une prestation et un client.",
+                    )
+                else:
+                    event_created = _create_event_from_form(
+                        request.user, calendar, start_at_raw, service_id, client_id
+                    )
+                    if event_created:
+                        return redirect(f"{reverse('dashboard')}?section=planning")
+                    messages.error(
+                        request,
+                        "Impossible de créer le rendez-vous. Vérifiez les informations fournies.",
+                    )
     calendar = None
     clients: list[dict[str, str]] = []
+    client_options: list[dict[str, str]] = []
+    user_services = []
+    is_professional = request.user.is_authenticated and request.user.user_type == User.UserType.PROFESSIONAL
     if request.user.is_authenticated:
-        calendar = Calendar.objects.filter(owner=request.user).first()
-        if calendar is None:
-            calendar = Calendar.objects.filter(is_public=True).first()
+        calendar = ensure_user_calendar(request.user)
         user_service_qs = Service.objects.filter(created_by=request.user).order_by(
             "name"
         )
@@ -119,22 +148,28 @@ def dashboard(request):
             .distinct()
         )
         user_services = list(user_service_qs)
-        if request.user.user_type == User.UserType.PROFESSIONAL:
-            clients = [
-                {
+        if is_professional:
+            client_queryset = User.objects.filter(
+                user_type=User.UserType.INDIVIDUAL,
+                linked_professional=request.user,
+            ).order_by("first_name", "last_name", "email")
+            for client in client_queryset:
+                full_name = (f"{client.first_name} {client.last_name}".strip()) or client.email
+                client_data = {
                     "id": client.pk,
-                    "full_name": (f"{client.first_name} {client.last_name}".strip())
-                    or client.email,
+                    "full_name": full_name,
                     "email": client.email,
                     "phone": getattr(client, "phone_number", "") or "—",
                 }
-                for client in User.objects.filter(
-                    user_type=User.UserType.INDIVIDUAL,
-                    linked_professional=request.user,
-                ).order_by("first_name", "last_name", "email")
-            ]
+                clients.append(client_data)
+                client_options.append(
+                    {
+                        "id": client.pk,
+                        "label": full_name,
+                    }
+                )
     else:
-        user_services = []
+        categories = Category.objects.none()
 
     try:
         week_offset = int(request.GET.get("week_offset", "0"))
@@ -162,12 +197,14 @@ def dashboard(request):
         "show_service_modal": show_service_form or bool(service_form.errors),
         "client_form": client_form,
         "show_client_modal": show_client_modal or bool(client_form.errors),
+        "is_professional": is_professional,
         "planner_hours": PLANNER_HOURS,
         "planning_days": build_calendar_events(calendar, week_offset=week_offset),
         "week_offset": week_offset,
         "planner_week_summary": planner_week_summary,
         "user_services": user_services,
         "clients": clients,
+        "client_options": client_options,
     }
     return render(request, "accounts/dashboard.html", context)
 
@@ -196,3 +233,39 @@ def workshop_detail(request, pk):
         "workshop_photo": workshop.photo or "img/elio-santos-5ZQn_gWKvLE-unsplash.jpg",
     }
     return render(request, "accounts/workshop_detail.html", context)
+
+
+def _create_event_from_form(user, calendar, start_at_raw, service_id, client_id):
+    """Return True if the event was created successfully."""
+
+    if not calendar:
+        return False
+    try:
+        start_at = datetime.fromisoformat(start_at_raw)
+    except (TypeError, ValueError):
+        return False
+    if timezone.is_naive(start_at):
+        start_at = timezone.make_aware(start_at, timezone.get_current_timezone())
+
+    service = Service.objects.filter(pk=service_id, created_by=user).first()
+    client = User.objects.filter(
+        pk=client_id,
+        linked_professional=user,
+        user_type=User.UserType.INDIVIDUAL,
+    ).first()
+    if not (service and client):
+        return False
+
+    duration = service.duration_minutes or 60
+    end_at = start_at + timedelta(minutes=duration)
+    event = Event.objects.create(
+        calendar=calendar,
+        title=service.name,
+        description=service.description or "",
+        start_at=start_at,
+        end_at=end_at,
+        created_by=user,
+        status="planned",
+    )
+    EventAttendee.objects.create(event=event, user=client)
+    return True

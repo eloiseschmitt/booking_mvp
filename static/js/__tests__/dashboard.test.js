@@ -57,6 +57,9 @@ const buildDom = () => {
         <select data-new-event-field="service">
           <option value="">Sélectionnez</option>
         </select>
+        <select data-new-event-field="client">
+          <option value="">Sélectionnez</option>
+        </select>
         <button type="button" data-new-event-confirm></button>
       </div>
     </div>

@@ -68,7 +68,10 @@
       <h2 id="event-modal-title">Détail du rendez-vous</h2>
       <button type="button" class="kitlast-modal__close" data-modal-close aria-label="Fermer la fenêtre">×</button>
     </header>
-    <div class="kitlast-modal__body kitlast-event-modal__body">
+    <form method="post" action="{% url 'dashboard' %}?section=planning" class="kitlast-modal__body kitlast-event-modal__body kitlast-modal__form" data-new-event-form>
+      {% csrf_token %}
+      <input type="hidden" name="action" value="add_event">
+      <input type="hidden" name="start_at" data-new-event-field="start-input">
       <div class="kitlast-event-modal__row">
         <span class="kitlast-event-modal__label">Date</span>
         <span class="kitlast-event-modal__value" data-event-field="date">—</span>
@@ -106,7 +109,7 @@
           Supprimer
         </button>
       </div>
-    </div>
+    </form>
   </div>
 </div>
 
@@ -117,7 +120,10 @@
       <h2 id="new-event-modal-title">Créer un rendez-vous</h2>
       <button type="button" class="kitlast-modal__close" data-modal-close aria-label="Fermer la fenêtre">×</button>
     </header>
-    <div class="kitlast-modal__body kitlast-event-modal__body">
+    <form method="post" action="{% url 'dashboard' %}?section=planning" class="kitlast-modal__body kitlast-event-modal__body kitlast-modal__form" data-new-event-form>
+      {% csrf_token %}
+      <input type="hidden" name="action" value="add_event">
+      <input type="hidden" name="start_at" data-new-event-field="start-input">
       <div class="kitlast-event-modal__row">
         <span class="kitlast-event-modal__label">Date</span>
         <span class="kitlast-event-modal__value" data-new-event-field="date">—</span>
@@ -130,6 +136,7 @@
         <label class="kitlast-event-modal__label" for="new-event-service">Prestation</label>
         <div class="kitlast-event-modal__value">
           <select id="new-event-service" class="kitlast-input" data-new-event-field="service"
+            name="service_id"
             {% if not user_services %}disabled{% endif %}>
             <option value="">Sélectionnez une prestation</option>
             {% for service in user_services %}
@@ -140,14 +147,29 @@
           </select>
         </div>
       </div>
+      <div class="kitlast-event-modal__row">
+        <label class="kitlast-event-modal__label" for="new-event-client">Client</label>
+        <div class="kitlast-event-modal__value">
+          <select id="new-event-client" class="kitlast-input" data-new-event-field="client"
+            name="client_id"
+            {% if not client_options %}disabled{% endif %}>
+            <option value="">Sélectionnez un client</option>
+            {% for client in client_options %}
+            <option value="{{ client.id }}">{{ client.label }}</option>
+            {% empty %}
+            <option value="" disabled>Aucun client disponible</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
       <div class="kitlast-event-modal__row kitlast-event-modal__row--description">
         <span class="kitlast-event-modal__label">Instructions</span>
         <span class="kitlast-event-modal__value" data-new-event-field="message">Choisissez « Ajouter un événement » pour planifier une nouvelle réservation à cet horaire.</span>
       </div>
       <div class="kitlast-event-modal__actions">
-        <button type="button" class="kitlast-button" data-new-event-confirm>Ajouter un événement</button>
+        <button type="submit" class="kitlast-button" data-new-event-submit disabled>Ajouter un événement</button>
         <button type="button" class="kitlast-button kitlast-button--ghost" data-modal-close>Annuler</button>
       </div>
-    </div>
+    </form>
   </div>
 </div>

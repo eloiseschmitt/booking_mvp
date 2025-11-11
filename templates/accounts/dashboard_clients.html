@@ -7,7 +7,7 @@
       <h2>Gestion des clients</h2>
       <p class="kitlast-section-header__text">Consultez vos clients et gérez leurs informations de contact.</p>
     </div>
-    {% if request.user.user_type == 'professional' %}
+    {% if is_professional %}
     <button type="button" class="kitlast-button" data-open-client-modal>Ajouter un client</button>
     {% endif %}
   </header>
@@ -48,6 +48,6 @@
   </div>
 </section>
 
-{% if request.user.user_type == 'professional' %}
+{% if is_professional %}
   {% render_modal modal_data_attr='data-client-modal' modal_title='Ajouter un client' modal_title_id='client-modal-title' modal_body_template='accounts/components/modal_client_form.html' modal_should_show=show_client_modal %}
 {% endif %}

@@ -8,9 +8,10 @@ from unittest.mock import MagicMock, patch
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.urls import reverse
+from django.utils import timezone
 
 from accounts.constants import PLANNER_HOURS
-from accounts.models import Category, Service, Workshop
+from accounts.models import Calendar, Category, Event, EventAttendee, Service, Workshop
 
 User = get_user_model()
 
@@ -29,6 +30,11 @@ class DashboardViewTests(TestCase):
             last_name="Client",
             user_type=User.UserType.INDIVIDUAL,
             linked_professional=self.user,
+        )
+        self.calendar = Calendar.objects.create(
+            owner=self.user,
+            name="Agenda principal",
+            slug=f"agenda-{self.user.pk}",
         )
         self.url = reverse("dashboard")
 
@@ -66,6 +72,8 @@ class DashboardViewTests(TestCase):
         self.assertEqual(
             response.context["clients"][0]["email"], self.client_user.email
         )
+        self.assertIn("client_options", response.context)
+        self.assertEqual(len(response.context["client_options"]), 1)
         planning_days = response.context["planning_days"]
         self.assertIsInstance(planning_days, list)
         self.assertGreaterEqual(len(planning_days), 1)
@@ -140,6 +148,37 @@ class DashboardViewTests(TestCase):
         self.assertEqual(created.linked_professional, self.user)
         self.assertEqual(created.user_type, User.UserType.INDIVIDUAL)
 
+    def test_dashboard_post_add_event_creates_event(self):
+        self.login()
+        service = Service.objects.create(
+            category=Category.objects.create(name="Spa"),
+            name="Massage duo",
+            duration_minutes=90,
+            created_by=self.user,
+        )
+        start_at = timezone.now().replace(minute=0, second=0, microsecond=0)
+        response = self.client.post(
+            f"{self.url}?section=planning",
+            {
+                "action": "add_event",
+                "start_at": start_at.isoformat(),
+                "service_id": service.pk,
+                "client_id": self.client_user.pk,
+            },
+        )
+
+        self.assertRedirects(response, f"{self.url}?section=planning")
+        event = Event.objects.get(calendar=self.calendar)
+        self.assertEqual(event.title, service.name)
+        self.assertEqual(event.created_by, self.user)
+        self.assertEqual(
+            timezone.localtime(event.start_at).replace(second=0, microsecond=0),
+            timezone.localtime(start_at).replace(second=0, microsecond=0),
+        )
+        self.assertTrue(
+            EventAttendee.objects.filter(event=event, user=self.client_user).exists()
+        )
+
 
 class DashboardViewIndividualTests(TestCase):
     def setUp(self):
@@ -177,6 +216,31 @@ class DashboardViewIndividualTests(TestCase):
         form = response.context["client_form"]
         self.assertTrue(form.errors)
         self.assertFalse(User.objects.filter(email="new@example.com").exists())
+
+    def test_individual_cannot_add_event(self):
+        self.login()
+        service = Service.objects.create(
+            category=Category.objects.create(name="Yoga"),
+            name="Séance test",
+            duration_minutes=60,
+            created_by=self.user,
+        )
+        start_at = timezone.now().replace(minute=0, second=0, microsecond=0)
+        initial_count = Event.objects.count()
+
+        response = self.client.post(
+            f"{self.url}?section=planning",
+            {
+                "action": "add_event",
+                "start_at": start_at.isoformat(),
+                "service_id": service.pk,
+                "client_id": self.professional.pk,
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(Event.objects.count(), initial_count)
+        self.assertFalse(Event.objects.filter(created_by=self.user).exists())
 
     def test_dashboard_lists_only_services_created_by_user(self):
         self.login()

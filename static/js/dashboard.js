@@ -26,14 +26,17 @@ const initializeDashboard = () => {
       deleteButton: eventModal.querySelector('[data-event-delete]'),
     }
     : null;
+  const newEventForm = newEventModal ? newEventModal.querySelector('[data-new-event-form]') : null;
+  const newEventSubmit = newEventModal ? newEventModal.querySelector('[data-new-event-submit]') : null;
   const newEventFieldMap = newEventModal
     ? {
-      date: newEventModal.querySelector('[data-new-event-field="date"]'),
-      time: newEventModal.querySelector('[data-new-event-field="time"]'),
-      message: newEventModal.querySelector('[data-new-event-field="message"]'),
-      confirm: newEventModal.querySelector('[data-new-event-confirm]'),
-      service: newEventModal.querySelector('[data-new-event-field="service"]'),
-    }
+        date: newEventModal.querySelector('[data-new-event-field="date"]'),
+        time: newEventModal.querySelector('[data-new-event-field="time"]'),
+        message: newEventModal.querySelector('[data-new-event-field="message"]'),
+        service: newEventModal.querySelector('[data-new-event-field="service"]'),
+        client: newEventModal.querySelector('[data-new-event-field="client"]'),
+        startInput: newEventModal.querySelector('[data-new-event-field="start-input"]'),
+      }
     : null;
   const plannerColumnsContainer = document.querySelector('.kitlast-planner__columns');
   const plannerColumns = plannerColumnsContainer ? Array.from(plannerColumnsContainer.querySelectorAll('[data-planner-column]')) : [];
@@ -254,6 +257,14 @@ const initializeDashboard = () => {
     }
   };
 
+  const updateNewEventSubmitState = () => {
+    if (!newEventSubmit) return;
+    const hasStart = Boolean(newEventFieldMap?.startInput?.value);
+    const hasService = Boolean(newEventFieldMap?.service?.value);
+    const hasClient = Boolean(newEventFieldMap?.client?.value);
+    newEventSubmit.disabled = !(hasStart && hasService && hasClient);
+  };
+
   const fillNewEventModal = (data) => {
     if (!newEventFieldMap) return;
     newEventFieldMap.date.textContent = data.dateDisplay;
@@ -261,13 +272,16 @@ const initializeDashboard = () => {
     if (newEventFieldMap.message) {
       newEventFieldMap.message.textContent = `Créneau sélectionné pour le ${data.dateDisplay} à ${data.timeDisplay}.`;
     }
-    if (newEventFieldMap.confirm) {
-      newEventFieldMap.confirm.dataset.newEventDate = data.dateIso;
-      newEventFieldMap.confirm.dataset.newEventTime = data.timeIso;
-    }
     if (newEventFieldMap.service) {
       newEventFieldMap.service.selectedIndex = 0;
     }
+    if (newEventFieldMap.client) {
+      newEventFieldMap.client.selectedIndex = 0;
+    }
+    if (newEventFieldMap.startInput) {
+      newEventFieldMap.startInput.value = data.dateIso || '';
+    }
+    updateNewEventSubmitState();
   };
 
   const updatePlannerButtons = (view) => {
@@ -408,21 +422,9 @@ const initializeDashboard = () => {
     });
   }
 
-  if (newEventFieldMap?.confirm && newEventModalHandlers) {
-    newEventFieldMap.confirm.addEventListener('click', () => {
-      newEventModalHandlers.close();
-      const url = new URL(window.location);
-      url.searchParams.set('section', 'planning');
-      url.searchParams.set(
-        'new_event_start',
-        newEventFieldMap.confirm.dataset.newEventDate || ''
-      );
-      if (newEventFieldMap.service && newEventFieldMap.service.value) {
-        url.searchParams.set('service_id', newEventFieldMap.service.value);
-      } else {
-        url.searchParams.delete('service_id');
-      }
-      window.location.href = url.toString();
+  if (newEventForm) {
+    newEventForm.addEventListener('submit', () => {
+      newEventModalHandlers?.close();
     });
   }
 
@@ -448,6 +450,13 @@ const initializeDashboard = () => {
       event.preventDefault();
       clientModalHandlers?.open();
     });
+  });
+
+  newEventFieldMap?.service?.addEventListener('change', () => {
+    updateNewEventSubmitState();
+  });
+  newEventFieldMap?.client?.addEventListener('change', () => {
+    updateNewEventSubmitState();
   });
 };
 
