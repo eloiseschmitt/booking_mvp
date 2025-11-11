@@ -30,6 +30,24 @@ def _safe_int(value: str | None) -> int | None:
         return None
 
 
+def _parse_iso_datetime(value: str | None) -> datetime | None:
+    """Parse ISO datetime strings and return aware datetimes."""
+
+    if not value:
+        return None
+    try:
+        parsed = datetime.fromisoformat(value)
+    except (TypeError, ValueError):
+        return None
+    if timezone.is_naive(parsed):
+        return timezone.make_aware(parsed, timezone.get_current_timezone())
+
+    # Drop the client-provided offset to keep the local value exactly as entered.
+    naive_local = parsed.replace(tzinfo=None)
+    return timezone.make_aware(naive_local, timezone.get_current_timezone())
+    return parsed
+
+
 def _initialize_dashboard_state(request):
     """Prepare base state (forms, flags) for the dashboard view."""
 
@@ -153,9 +171,10 @@ def _handle_add_event(request, state):
     calendar = ensure_user_calendar(request.user)
     state["calendar"] = calendar
     start_at_raw = request.POST.get("start_at")
+    end_at_raw = request.POST.get("end_at")
     service_id = request.POST.get("service_id")
     client_id = request.POST.get("client_id")
-    if not (start_at_raw and service_id and client_id):
+    if not (start_at_raw and end_at_raw and service_id and client_id):
         messages.error(
             request,
             "Veuillez sélectionner un horaire, une prestation et un client.",
@@ -163,7 +182,7 @@ def _handle_add_event(request, state):
         return None
 
     event_created = _create_event_from_form(
-        request.user, calendar, start_at_raw, service_id, client_id
+        request.user, calendar, start_at_raw, end_at_raw, service_id, client_id
     )
     if event_created:
         return redirect(f"{reverse('dashboard')}?section=planning")
@@ -325,17 +344,19 @@ def workshop_detail(request, pk):
     return render(request, "accounts/workshop_detail.html", context)
 
 
-def _create_event_from_form(user, calendar, start_at_raw, service_id, client_id):
+def _create_event_from_form(
+    user, calendar, start_at_raw, end_at_raw, service_id, client_id
+):
     """Return True if the event was created successfully."""
 
     if not calendar:
         return False
-    try:
-        start_at = datetime.fromisoformat(start_at_raw)
-    except (TypeError, ValueError):
+    start_at = _parse_iso_datetime(start_at_raw)
+    if start_at is None:
         return False
-    if timezone.is_naive(start_at):
-        start_at = timezone.make_aware(start_at, timezone.get_current_timezone())
+    end_at = _parse_iso_datetime(end_at_raw)
+    if end_at is None:
+        end_at = start_at
 
     service = Service.objects.filter(pk=service_id, created_by=user).first()
     client = User.objects.filter(
@@ -346,8 +367,9 @@ def _create_event_from_form(user, calendar, start_at_raw, service_id, client_id)
     if not (service and client):
         return False
 
-    duration = service.duration_minutes or 60
-    end_at = start_at + timedelta(minutes=duration)
+    if end_at <= start_at:
+        duration = service.duration_minutes or 60
+        end_at = start_at + timedelta(minutes=duration)
     event = Event.objects.create(
         calendar=calendar,
         title=service.name,

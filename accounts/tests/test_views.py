@@ -2,6 +2,7 @@
 
 # pylint: disable=missing-class-docstring,missing-function-docstring,no-member
 
+from datetime import timedelta
 from decimal import Decimal
 from unittest.mock import MagicMock, patch
 
@@ -169,11 +170,13 @@ class DashboardViewTests(TestCase):
             created_by=self.user,
         )
         start_at = timezone.now().replace(minute=0, second=0, microsecond=0)
+        end_at = start_at + timedelta(hours=2)
         response = self.client.post(
             f"{self.url}?section=planning",
             {
                 "action": "add_event",
                 "start_at": start_at.isoformat(),
+                "end_at": end_at.isoformat(),
                 "service_id": service.pk,
                 "client_id": self.client_user.pk,
             },
@@ -186,6 +189,10 @@ class DashboardViewTests(TestCase):
         self.assertEqual(
             timezone.localtime(event.start_at).replace(second=0, microsecond=0),
             timezone.localtime(start_at).replace(second=0, microsecond=0),
+        )
+        self.assertEqual(
+            timezone.localtime(event.end_at).replace(second=0, microsecond=0),
+            timezone.localtime(end_at).replace(second=0, microsecond=0),
         )
         self.assertTrue(
             EventAttendee.objects.filter(event=event, user=self.client_user).exists()
@@ -238,6 +245,7 @@ class DashboardViewIndividualTests(TestCase):
             created_by=self.user,
         )
         start_at = timezone.now().replace(minute=0, second=0, microsecond=0)
+        end_at = start_at + timedelta(hours=1)
         initial_count = Event.objects.count()
 
         response = self.client.post(
@@ -245,6 +253,7 @@ class DashboardViewIndividualTests(TestCase):
             {
                 "action": "add_event",
                 "start_at": start_at.isoformat(),
+                "end_at": end_at.isoformat(),
                 "service_id": service.pk,
                 "client_id": self.professional.pk,
             },

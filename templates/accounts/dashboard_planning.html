@@ -46,6 +46,7 @@
               data-event-description="{{ event.description|default_if_none:''|escape }}"
               data-event-status="{{ event.status|escape }}"
               data-event-created-by="{{ event.created_by|default_if_none:''|escape }}"
+              data-event-client="{{ event.client|default_if_none:''|escape }}"
               data-event-start="{{ event.start }}"
               data-event-end="{{ event.end }}"
               style="top: {{ event.top_pct }}%; height: {{ event.height_pct }}%; background-color: {{ event.color }};">
@@ -100,6 +101,10 @@
         <span class="kitlast-event-modal__label">Créé par</span>
         <span class="kitlast-event-modal__value" data-event-field="created_by">—</span>
       </div>
+      <div class="kitlast-event-modal__row">
+        <span class="kitlast-event-modal__label">Client</span>
+        <span class="kitlast-event-modal__value" data-event-field="client">—</span>
+      </div>
       <div class="kitlast-event-modal__row kitlast-event-modal__row--description">
         <span class="kitlast-event-modal__label">Description</span>
         <span class="kitlast-event-modal__value" data-event-field="description">—</span>
@@ -124,13 +129,25 @@
       {% csrf_token %}
       <input type="hidden" name="action" value="add_event">
       <input type="hidden" name="start_at" data-new-event-field="start-input">
+      <input type="hidden" name="end_at" data-new-event-field="end-input">
       <div class="kitlast-event-modal__row">
         <span class="kitlast-event-modal__label">Date</span>
         <span class="kitlast-event-modal__value" data-new-event-field="date">—</span>
       </div>
       <div class="kitlast-event-modal__row">
         <span class="kitlast-event-modal__label">Horaire</span>
-        <span class="kitlast-event-modal__value" data-new-event-field="time">—</span>
+        <div class="kitlast-event-modal__value kitlast-event-modal__value--inline">
+          <label class="kitlast-sr-only" for="new-event-start">Heure de début</label>
+          <select id="new-event-start" class="kitlast-input kitlast-input--inline" data-new-event-field="start-select" name="start_time">
+            <option value="">—</option>
+          </select>
+          <span class="kitlast-event-modal__separator">à</span>
+          <label class="kitlast-sr-only" for="new-event-end">Heure de fin</label>
+          <select id="new-event-end" class="kitlast-input kitlast-input--inline" data-new-event-field="end-select" name="end_time">
+            <option value="">—</option>
+          </select>
+          <span class="kitlast-event-modal__value kitlast-event-modal__value--time" data-new-event-field="time">—</span>
+        </div>
       </div>
       <div class="kitlast-event-modal__row">
         <label class="kitlast-event-modal__label" for="new-event-service">Prestation</label>

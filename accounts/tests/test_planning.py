@@ -6,7 +6,7 @@ from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.utils import timezone
 
-from accounts.models import Calendar, Category, Service
+from accounts.models import Calendar, Category, EventAttendee, Service
 from accounts.planning import _compute_block, build_calendar_events
 
 
@@ -112,7 +112,15 @@ class BuildCalendarEventsTests(TestCase):
             datetime.combine(timezone.localdate(), time(hour=9, minute=0)),
             timezone.get_current_timezone(),
         )
-        calendar.events.create(
+        client = get_user_model().objects.create_user(
+            email="client@example.com",
+            password="safe-password",
+            first_name="Lena",
+            last_name="Client",
+            user_type=get_user_model().UserType.INDIVIDUAL,
+            linked_professional=self.user,
+        )
+        event = calendar.events.create(
             title=service.name,
             description="Detailed description",
             start_at=start,
@@ -120,6 +128,7 @@ class BuildCalendarEventsTests(TestCase):
             status="confirmed",
             created_by=self.user,
         )
+        EventAttendee.objects.create(event=event, user=client)
 
         data = build_calendar_events(calendar)
         event = next(day["events"][0] for day in data if day["events"])
@@ -128,6 +137,7 @@ class BuildCalendarEventsTests(TestCase):
         self.assertEqual(event["category"], category.name)
         self.assertEqual(event["created_by"], "Romy Ford")
         self.assertIn("Romy Ford", event["title"])
+        self.assertEqual(event["client"], "Lena Client")
         self.assertEqual(event["status"], "Confirmed")
         self.assertTrue(event["time"].startswith("09:00"))
         self.assertIn("start", event)

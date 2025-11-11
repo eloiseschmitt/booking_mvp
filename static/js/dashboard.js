@@ -22,20 +22,34 @@ const initializeDashboard = () => {
       category: eventModal.querySelector('[data-event-field="category"]'),
       status: eventModal.querySelector('[data-event-field="status"]'),
       created_by: eventModal.querySelector('[data-event-field="created_by"]'),
+      client: eventModal.querySelector('[data-event-field="client"]'),
       description: eventModal.querySelector('[data-event-field="description"]'),
       deleteButton: eventModal.querySelector('[data-event-delete]'),
     }
     : null;
   const newEventForm = newEventModal ? newEventModal.querySelector('[data-new-event-form]') : null;
   const newEventSubmit = newEventModal ? newEventModal.querySelector('[data-new-event-submit]') : null;
+  const MIN_SLOT_MINUTES = 8 * 60;
+  const MAX_SLOT_MINUTES = 20 * 60;
+  const SLOT_INTERVAL = 15;
+
+  const newEventState = {
+    baseDate: null,
+    dateLabel: '',
+    absoluteMinutes: MIN_SLOT_MINUTES,
+  };
+
   const newEventFieldMap = newEventModal
     ? {
         date: newEventModal.querySelector('[data-new-event-field="date"]'),
         time: newEventModal.querySelector('[data-new-event-field="time"]'),
+        startSelect: newEventModal.querySelector('[data-new-event-field="start-select"]'),
+        endSelect: newEventModal.querySelector('[data-new-event-field="end-select"]'),
         message: newEventModal.querySelector('[data-new-event-field="message"]'),
         service: newEventModal.querySelector('[data-new-event-field="service"]'),
         client: newEventModal.querySelector('[data-new-event-field="client"]'),
         startInput: newEventModal.querySelector('[data-new-event-field="start-input"]'),
+        endInput: newEventModal.querySelector('[data-new-event-field="end-input"]'),
       }
     : null;
   const plannerColumnsContainer = document.querySelector('.kitlast-planner__columns');
@@ -230,6 +244,16 @@ const initializeDashboard = () => {
     return `${hours}:${minutes}`;
   };
 
+  const formatLocalDateTime = (date) => {
+    const pad = (num) => String(num).padStart(2, '0');
+    const offsetMinutes = -date.getTimezoneOffset();
+    const sign = offsetMinutes >= 0 ? '+' : '-';
+    const absOffset = Math.abs(offsetMinutes);
+    const offsetHoursPart = pad(Math.floor(absOffset / 60));
+    const offsetMinutesPart = pad(absOffset % 60);
+    return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}:00${sign}${offsetHoursPart}:${offsetMinutesPart}`;
+  };
+
   const parseColumnDate = (value) => {
     const [day, month] = (value || '').split('/').map(Number);
     const year = new Date().getFullYear();
@@ -246,6 +270,9 @@ const initializeDashboard = () => {
     eventFieldMap.category.textContent = data.category || fallback;
     eventFieldMap.status.textContent = data.status || fallback;
     eventFieldMap.created_by.textContent = data.created_by || fallback;
+    if (eventFieldMap.client) {
+      eventFieldMap.client.textContent = data.client || fallback;
+    }
     eventFieldMap.description.textContent = data.description || fallback;
     if (eventFieldMap.deleteButton) {
       const start = data.start || '';
@@ -265,25 +292,108 @@ const initializeDashboard = () => {
     newEventSubmit.disabled = !(hasStart && hasService && hasClient);
   };
 
+  const populateTimeSelect = (selectElement, selectedValue) => {
+    if (!selectElement) return;
+    selectElement.innerHTML = '';
+    for (let minute = MIN_SLOT_MINUTES; minute <= MAX_SLOT_MINUTES; minute += SLOT_INTERVAL) {
+      const value = minutesToTime(minute);
+      const option = document.createElement('option');
+      option.value = value;
+      option.textContent = value;
+      option.selected = value === selectedValue;
+      selectElement.appendChild(option);
+    }
+  };
+
+  const parseTimeToMinutes = (value) => {
+    if (!value) return null;
+    const [hours, minutes] = value.split(':').map(Number);
+    if (Number.isNaN(hours) || Number.isNaN(minutes)) {
+      return null;
+    }
+    return hours * 60 + minutes;
+  };
+
+  const buildDateFromTime = (baseDate, value) => {
+    if (!baseDate || !value) return null;
+    const [hours, minutes] = value.split(':').map(Number);
+    if (Number.isNaN(hours) || Number.isNaN(minutes)) {
+      return null;
+    }
+    const date = new Date(baseDate.getTime());
+    date.setHours(hours, minutes, 0, 0);
+    return date;
+  };
+
+  const syncNewEventTimeState = () => {
+    if (!newEventFieldMap || !newEventState.baseDate) return;
+    const startValue = newEventFieldMap.startSelect?.value || minutesToTime(MIN_SLOT_MINUTES);
+    let endValue = newEventFieldMap.endSelect?.value || minutesToTime(Math.min(MAX_SLOT_MINUTES, parseTimeToMinutes(startValue) + SLOT_INTERVAL));
+
+    const startMinutes = parseTimeToMinutes(startValue) ?? MIN_SLOT_MINUTES;
+    let endMinutes = parseTimeToMinutes(endValue) ?? startMinutes + SLOT_INTERVAL;
+    if (endMinutes <= startMinutes) {
+      endMinutes = Math.min(MAX_SLOT_MINUTES, startMinutes + SLOT_INTERVAL);
+      endValue = minutesToTime(endMinutes);
+      if (newEventFieldMap.endSelect) {
+        newEventFieldMap.endSelect.value = endValue;
+      }
+    }
+    if (newEventFieldMap.startSelect) {
+      newEventFieldMap.startSelect.value = minutesToTime(startMinutes);
+    }
+
+    const startDate = buildDateFromTime(newEventState.baseDate, minutesToTime(startMinutes));
+    const endDate = buildDateFromTime(newEventState.baseDate, minutesToTime(endMinutes));
+    if (startDate && newEventFieldMap.startInput) {
+      newEventFieldMap.startInput.value = formatLocalDateTime(startDate);
+    }
+    if (endDate && newEventFieldMap.endInput) {
+      newEventFieldMap.endInput.value = formatLocalDateTime(endDate);
+    }
+
+    const displayText = `${minutesToTime(startMinutes)} – ${minutesToTime(endMinutes)}`;
+    if (newEventFieldMap.time) {
+      newEventFieldMap.time.textContent = displayText;
+    }
+    if (newEventFieldMap.message && newEventState.dateLabel) {
+      newEventFieldMap.message.textContent = `Créneau sélectionné pour le ${newEventState.dateLabel} de ${displayText}.`;
+    }
+
+    updateNewEventSubmitState();
+  };
+
   const fillNewEventModal = (data) => {
     if (!newEventFieldMap) return;
+    const baseDate =
+      data.baseDate instanceof Date ? new Date(data.baseDate.getTime()) : new Date();
+    newEventState.baseDate = baseDate;
+    newEventState.dateLabel = data.dateDisplay;
     newEventFieldMap.date.textContent = data.dateDisplay;
     newEventFieldMap.time.textContent = data.timeDisplay;
-    if (newEventFieldMap.message) {
-      newEventFieldMap.message.textContent = `Créneau sélectionné pour le ${data.dateDisplay} à ${data.timeDisplay}.`;
-    }
+    populateTimeSelect(newEventFieldMap.startSelect, data.timeDisplay);
+    const endMinutes = Math.min(
+      MAX_SLOT_MINUTES,
+      (data.absoluteMinutes ?? MIN_SLOT_MINUTES) + 60
+    );
+    const endTimeDisplay = minutesToTime(endMinutes);
+    populateTimeSelect(newEventFieldMap.endSelect, endTimeDisplay);
     if (newEventFieldMap.service) {
       newEventFieldMap.service.selectedIndex = 0;
     }
     if (newEventFieldMap.client) {
       newEventFieldMap.client.selectedIndex = 0;
     }
-    if (newEventFieldMap.startInput) {
-      newEventFieldMap.startInput.value = data.dateIso || '';
-    }
-    updateNewEventSubmitState();
+    newEventState.absoluteMinutes = data.absoluteMinutes ?? MIN_SLOT_MINUTES;
+    syncNewEventTimeState();
   };
 
+  newEventFieldMap?.startSelect?.addEventListener('change', () => {
+    syncNewEventTimeState();
+  });
+  newEventFieldMap?.endSelect?.addEventListener('change', () => {
+    syncNewEventTimeState();
+  });
   const updatePlannerButtons = (view) => {
     plannerButtons.forEach((button) => {
       button.classList.toggle('kitlast-planner__button--active', button.dataset.plannerAction === view);
@@ -380,6 +490,7 @@ const initializeDashboard = () => {
           description: card.dataset.eventDescription,
           status: card.dataset.eventStatus,
           created_by: card.dataset.eventCreatedBy,
+          client: card.dataset.eventClient,
           start: card.dataset.eventStart,
           end: card.dataset.eventEnd,
         });
@@ -416,6 +527,8 @@ const initializeDashboard = () => {
         dateDisplay: rawDate,
         timeDisplay,
         dateIso: startDate.toISOString(),
+        baseDate: baseDate,
+        absoluteMinutes,
         timeIso: timeDisplay,
       });
       newEventModalHandlers.open();

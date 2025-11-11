@@ -18,6 +18,7 @@ class EventView(NamedTuple):
     description: str
     status: str
     created_by: str
+    client: str
     start: str
     end: str
     top_pct: float

@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections import defaultdict
 from datetime import date, datetime, time, timedelta
 
+from django.db.models import Prefetch
 from django.utils import timezone
 
 from .constants import (
@@ -14,7 +15,7 @@ from .constants import (
     TOTAL_PLANNER_SPAN_MINUTES,
 )
 from .event_view import EventView
-from .models import Calendar, Service
+from .models import Calendar, EventAttendee, Service
 
 PLANNER_HOURS = _PLANNER_HOURS
 
@@ -133,6 +134,20 @@ def _event_colour(index: int) -> str:
     return PLANNER_COLOR_PALETTE[index % len(PLANNER_COLOR_PALETTE)]
 
 
+def _resolve_event_client(event) -> str:
+    """Return the display name for the first attendee if available."""
+
+    attendees = getattr(event, "attendees", None)
+    if attendees is None:
+        return ""
+    attendee = next(
+        (att for att in attendees.all() if getattr(att, "user", None)), None
+    )
+    if attendee and attendee.user:
+        return _resolve_author(attendee.user)
+    return ""
+
+
 def _build_event_view(
     event, index: int, service_lookup: dict[str, Service]
 ) -> EventView:
@@ -148,6 +163,7 @@ def _build_event_view(
         service_model.category.name if service_model and service_model.category else ""
     )
     author = _resolve_author(event.created_by)
+    client_name = _resolve_event_client(event)
     display_title = f"{author} · {service_name}" if author else service_name
 
     return EventView(
@@ -161,6 +177,7 @@ def _build_event_view(
         description=event.description or "",
         status=event.get_status_display(),
         created_by=author,
+        client=client_name,
         start=start_local.isoformat(),
         end=end_local.isoformat(),
         **_compute_block(start_local, end_local),
@@ -206,8 +223,12 @@ def build_calendar_events(
     start_dt = timezone.make_aware(datetime.combine(start_of_week, time.min), tz)
     end_dt = start_dt + timedelta(days=7)
 
+    attendee_prefetch = Prefetch(
+        "attendees", queryset=EventAttendee.objects.select_related("user")
+    )
     queryset = list(
         calendar.events.select_related("created_by")
+        .prefetch_related(attendee_prefetch)
         .filter(start_at__gte=start_dt, start_at__lt=end_dt)
         .order_by("start_at")
     )

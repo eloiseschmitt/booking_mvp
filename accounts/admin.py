@@ -2,7 +2,7 @@
 
 from django.contrib import admin
 
-from .models import Category, Service, Workshop
+from .models import Category, Event, Service, Workshop
 
 
 @admin.register(Category)
@@ -36,3 +36,30 @@ class WorkshopAdmin(admin.ModelAdmin):
     list_display = ("name", "address", "city", "zip_code")
     search_fields = ("name", "address", "city", "zip_code")
     filter_horizontal = ("services", "professionals")
+
+
+@admin.register(Event)
+class EventAdmin(admin.ModelAdmin):
+    """Admin configuration for calendar events."""
+
+    list_display = (
+        "title",
+        "calendar",
+        "professional",
+        "client",
+        "start_at",
+        "end_at",
+        "status",
+    )
+    list_filter = ("status", "calendar")
+    search_fields = ("title", "calendar__name", "created_by__email")
+    date_hierarchy = "start_at"
+
+    def professional(self, obj):
+        """Return the professional linked to the event."""
+        return getattr(obj, "created_by", None)
+
+    def client(self, obj):
+        """Return the first attendee considered as a client."""
+        attendee = obj.attendees.select_related("user").first()
+        return attendee.user if attendee else None
