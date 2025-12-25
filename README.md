@@ -48,7 +48,7 @@ cd booking_mvp
 python -m venv .venv
 source .venv/bin/activate  # ou .\.venv\Scripts\activate sur Windows
 pip install --upgrade pip
-pip install django==5.2.6 coverage ruff mypy black==23.9.1 pre-commit
+pip install django==5.2.6 coverage ruff mypy pre-commit
 ```
 
 Initialiser la base puis lancer le serveur :
@@ -63,11 +63,10 @@ Le tableau de bord est accessible sur `http://127.0.0.1:8000/`.
 ## Qualité & automatisation
 
 - **Ruff** : `ruff check .` (remplace Flake8 / Pylint pour la plupart des règles)
-- **Black** : `black .` (la CI vérifie via `black --check .`)
 - **Mypy** : `mypy .`
-- **Pré-commit** : installez les hooks avec `pre-commit install` une fois l’environnement configuré. Le dépôt utilise aujourd'hui `black` et `mypy` dans les hooks; `ruff` est exécuté séparément dans la CI.
+- **Pré-commit** : installez les hooks avec `pre-commit install` une fois l’environnement configuré. Le dépôt utilise aujourd'hui `ruff` et `mypy` dans les hooks; l'analyse Ruff est aussi exécutée dans la CI.
 - **CI GitHub Actions** (`.github/workflows/ci.yml`) :
-  - lint + analyse statique (Ruff, Black, mypy) ;
+  - lint + analyse statique (Ruff, mypy) ;
   - exécution des tests unitaires avec `coverage run` puis génération de `coverage.xml` ;
   - job SonarQube dédié (macOS) qui rejoue la suite de tests et pousse les rapports (badge de couverture ci‑dessus).
 
