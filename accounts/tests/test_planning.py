@@ -6,7 +6,7 @@ from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.utils import timezone
 
-from accounts.models import Calendar, Category, Event, EventAttendee, Service
+from accounts.models import Calendar, Category, EventAttendee, Service
 from accounts.planning import _compute_block, build_calendar_events
 
 
@@ -37,7 +37,6 @@ class BuildCalendarEventsTests(TestCase):
 
     def test_empty_calendar_returns_empty_week(self):
         """Ensure build_calendar_events returns seven empty days when no events."""
-
         calendar = Calendar.objects.create(
             owner=self.user,
             name="Empty calendar",
@@ -51,7 +50,6 @@ class BuildCalendarEventsTests(TestCase):
 
     def test_week_offset_filters_events(self):
         """Events are scoped to the requested week offset."""
-
         calendar = Calendar.objects.create(
             owner=self.user,
             name="Personal",
@@ -80,7 +78,6 @@ class BuildCalendarEventsTests(TestCase):
 
     def test_missing_calendar_returns_sample_week(self):
         """When no calendar is provided the fallback sample data is returned."""
-
         data = build_calendar_events(calendar=None)
 
         self.assertEqual(len(data), 7)
@@ -91,7 +88,6 @@ class BuildCalendarEventsTests(TestCase):
 
     def test_event_includes_service_and_author_metadata(self):
         """Service/category lookup enriches planner events."""
-
         calendar = Calendar.objects.create(
             owner=self.user,
             name="Professional agenda",

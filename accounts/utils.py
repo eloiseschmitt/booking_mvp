@@ -7,7 +7,6 @@ from .models import Calendar
 
 def ensure_user_calendar(user):
     """Return the calendar for a user, creating it if needed."""
-
     calendar = Calendar.objects.filter(owner=user).first()
     if calendar is None:
         calendar = Calendar.objects.filter(is_public=True).first()

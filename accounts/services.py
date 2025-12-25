@@ -1,6 +1,6 @@
 """Service-related helpers for form preparation and persistence."""
 
-from typing import Any, Optional, Tuple
+from typing import Any
 
 from django.db import transaction
 from django.shortcuts import get_object_or_404
@@ -10,8 +10,8 @@ from .models import Service
 
 
 def prepare_service_form(
-    service_id: Optional[int] = None, *, data: Optional[dict[str, Any]] = None
-) -> Tuple[ServiceForm, Optional[Service]]:
+    service_id: int | None = None, *, data: dict[str, Any] | None = None
+) -> tuple[ServiceForm, Service | None]:
     """Return a service form (optionally bound to an instance) and the service."""
     if service_id:
         service = get_object_or_404(Service, pk=service_id)

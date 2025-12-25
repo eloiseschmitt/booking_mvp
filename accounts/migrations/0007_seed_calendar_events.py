@@ -11,7 +11,6 @@ from django.contrib.auth.hashers import make_password
 from django.db import migrations
 from django.utils import timezone
 
-
 SAMPLE_EVENTS = [
     # weekday, start, end, first_name, last_name, email, service_name
     (
@@ -204,7 +203,6 @@ def _parse_time(base_date, weekday: int, time_str: str):
 
 def create_events(apps, _schema_editor):
     """Populate the planning tables with sample data."""
-
     user_model = apps.get_model("users", "User")
     category_model = apps.get_model("accounts", "Category")
     service_model = apps.get_model("accounts", "Service")
@@ -276,7 +274,6 @@ def create_events(apps, _schema_editor):
 
 def delete_events(apps, _schema_editor):
     """Rollback helper to remove seeded data."""
-
     calendar_model = apps.get_model("accounts", "Calendar")
     try:
         calendar = calendar_model.objects.get(slug=CALENDAR_SLUG)

@@ -8,7 +8,6 @@ register = template.Library()
 @register.inclusion_tag("accounts/components/modal_wrapper.html", takes_context=True)
 def render_modal(context, **modal_options):
     """Render a modal wrapper with the provided keyword options."""
-
     required_keys = {
         "modal_data_attr",
         "modal_title",

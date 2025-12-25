@@ -17,6 +17,7 @@ class Category(models.Model):
         ordering = ["name"]
 
     def __str__(self) -> str:
+        """Return a string representation of the user."""
         return str(self.name)
 
 
@@ -44,6 +45,7 @@ class Service(models.Model):
         ordering = ["name"]
 
     def __str__(self) -> str:
+        """Return a string representation of the user."""
         return str(self.name)
 
 
@@ -71,6 +73,7 @@ class Workshop(models.Model):
         ordering = ["name"]
 
     def __str__(self) -> str:
+        """Return a string representation of the user."""
         return str(self.name)
 
 
@@ -100,6 +103,7 @@ class Calendar(models.Model):
         verbose_name_plural = "calendars"
 
     def __str__(self):
+        """Return a string representation of the user."""
         return f"{self.name} ({self.owner})"
 
 
@@ -148,6 +152,7 @@ class Event(models.Model):
         verbose_name_plural = "events"
 
     def __str__(self):
+        """Return a string representation of the user."""
         return f"{self.title} – {self.start_at} → {self.end_at}"
 
 

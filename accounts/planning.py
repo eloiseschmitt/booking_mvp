@@ -11,8 +11,10 @@ from django.utils import timezone
 from .constants import (
     FALLBACK_WEEK,
     PLANNER_COLOR_PALETTE,
-    PLANNER_HOURS as _PLANNER_HOURS,
     TOTAL_PLANNER_SPAN_MINUTES,
+)
+from .constants import (
+    PLANNER_HOURS as _PLANNER_HOURS,
 )
 from .event_view import EventView
 from .models import Calendar, EventAttendee, Service
@@ -50,7 +52,6 @@ def _weekday_label(value: datetime) -> str:
 
 def _start_of_week(week_offset: int) -> date:
     """Return the date for the Monday of the requested week offset."""
-
     today = timezone.localdate()
     current_week_start = today - timedelta(days=today.weekday())
     return current_week_start + timedelta(weeks=week_offset)
@@ -105,7 +106,6 @@ def _empty_week(start_of_week: date) -> list[dict[str, object]]:
 
 def _build_service_lookup(events: list) -> dict[str, Service]:
     """Return a mapping from event titles to Service instances."""
-
     titles = {event.title for event in events}
     if not titles:
         return {}
@@ -119,7 +119,6 @@ def _build_service_lookup(events: list) -> dict[str, Service]:
 
 def _resolve_author(user) -> str:
     """Return the display name for the creator of an event."""
-
     if user is None:
         return ""
     author_parts = [
@@ -136,7 +135,6 @@ def _event_colour(index: int) -> str:
 
 def _resolve_event_client(event) -> str:
     """Return the display name for the first attendee if available."""
-
     attendees = getattr(event, "attendees", None)
     if attendees is None:
         return ""
@@ -152,14 +150,17 @@ def _build_event_view(
     event, index: int, service_lookup: dict[str, Service]
 ) -> EventView:
     """Convert a database event into the EventView structure expected by the UI."""
-
     start_local = timezone.localtime(event.start_at)
     end_local = timezone.localtime(event.end_at)
     label = _weekday_label(start_local)
     date_label = start_local.strftime("%d/%m")
     service_model = service_lookup.get(event.title)
     service_name = service_model.name if service_model else event.title
-    price = str(service_model.price) if service_model and service_model.price is not None else ""
+    price = (
+        str(service_model.price)
+        if service_model and service_model.price is not None
+        else ""
+    )
     category_name = (
         service_model.category.name if service_model and service_model.category else ""
     )
@@ -191,7 +192,6 @@ def _group_event_views(
     event_views: list[EventView], start_of_week: date
 ) -> list[dict[str, object]]:
     """Group event views by day and include empty days for the full week."""
-
     grouped: dict[tuple[str, str], list[EventView]] = defaultdict(list)
     for view in sorted(event_views, key=lambda item: item.start):
         grouped[(view.label, view.date)].append(view)
@@ -216,7 +216,6 @@ def build_calendar_events(
     calendar: Calendar | None, week_offset: int = 0
 ) -> list[dict[str, object]]:
     """Generate planner data either from the database or fallback sample data."""
-
     start_of_week = _start_of_week(week_offset)
 
     if calendar is None:

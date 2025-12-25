@@ -9,6 +9,7 @@ class UserLinkedProfessionalTests(TestCase):
     """Ensure user/professional relationships are enforced."""
 
     def setUp(self):
+        """Set up data used by the tests."""
         self.user_model = get_user_model()
         self.professional = self.user_model.objects.create_user(
             email="pro@example.com",

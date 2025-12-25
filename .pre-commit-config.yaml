@@ -19,13 +19,9 @@ repos:
       - id: mypy
         additional_dependencies:
           - django==5.2.6
-
-  - repo: local
+  - repo: https://github.com/astral-sh/ruff
+    rev: v0.14.3
     hooks:
-      - id: pylint
-        name: pylint (accounts)
-        entry: pylint accounts booking_mvp users
-        language: python
-        additional_dependencies:
-          - pylint==3.2.5
-          - django==5.2.6
+      - id: ruff
+        name: ruff (lint)
+        additional_dependencies: []

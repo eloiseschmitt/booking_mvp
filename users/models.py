@@ -72,6 +72,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     REQUIRED_FIELDS: list[str] = []
 
     def __str__(self) -> str:
+        """Return a string representation of the user."""
         return str(self.email)
 
     @property
@@ -80,6 +81,7 @@ class User(AbstractBaseUser, PermissionsMixin):
         return self.user_type == self.UserType.PROFESSIONAL
 
     def clean(self):
+        """Ensure user relationships are valid."""
         super().clean()
         if self.user_type == self.UserType.INDIVIDUAL:
             if not self.linked_professional:
@@ -105,5 +107,6 @@ class User(AbstractBaseUser, PermissionsMixin):
             )
 
     def save(self, *args, **kwargs):
+        """Validate the user before saving."""
         self.full_clean()
         return super().save(*args, **kwargs)

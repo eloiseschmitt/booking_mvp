@@ -23,7 +23,6 @@ User = get_user_model()
 
 def _safe_int(value: str | None) -> int | None:
     """Return an int for the provided string, or None when invalid."""
-
     try:
         return int(value) if value is not None else None
     except (TypeError, ValueError):
@@ -32,7 +31,6 @@ def _safe_int(value: str | None) -> int | None:
 
 def _parse_iso_datetime(value: str | None) -> datetime | None:
     """Parse ISO datetime strings and return aware datetimes."""
-
     if not value:
         return None
     try:
@@ -49,7 +47,6 @@ def _parse_iso_datetime(value: str | None) -> datetime | None:
 
 def _initialize_dashboard_state(request):
     """Prepare base state (forms, flags) for the dashboard view."""
-
     section = request.GET.get("section", "overview")
     show_category_form = request.GET.get("show") == "category-form"
     show_service_form = request.GET.get("show") == "service-form"
@@ -244,7 +241,6 @@ def _handle_add_event(request, state):
 
 def _handle_delete_event(request, state):
     """Delete an existing event owned by the professional."""
-
     state["section"] = "planning"
     if not request.user.is_authenticated:
         return redirect("login")
@@ -287,7 +283,6 @@ def _dispatch_dashboard_action(request, state) -> HttpResponse | None:
 
 def _build_dashboard_context(request, state):
     """Aggregate all data needed to render the dashboard."""
-
     calendar = state.get("calendar")
     clients: list[dict[str, str]] = []
     client_options: list[dict[str, str]] = []
@@ -433,7 +428,6 @@ def _create_event_from_form(
     user, calendar, start_at_raw, end_at_raw, service_id, client_id
 ):
     """Return True if the event was created successfully."""
-
     if not calendar:
         return False
     start_at = _parse_iso_datetime(start_at_raw)
