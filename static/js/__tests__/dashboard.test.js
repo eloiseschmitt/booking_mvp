@@ -73,14 +73,32 @@ const buildDom = () => {
     <div class="kitlast-modal" data-client-modal hidden data-testid="client-modal">
       <div class="kitlast-modal__overlay" data-modal-close></div>
       <div class="kitlast-modal__content">
-        <form>
-          <input type="text" />
+        <header class="kitlast-modal__header">
+          <h2 id="client-modal-title">Ajouter un client</h2>
           <button type="button" data-modal-close>×</button>
+        </header>
+        <form data-client-form>
+          <input type="hidden" name="action" value="add_client" data-client-form-action>
+          <input type="hidden" name="client_id" value="" data-client-form-id>
+          <input name="first_name" />
+          <input name="last_name" />
+          <input name="email" />
+          <input name="phone_number" />
+          <button type="submit">Enregistrer</button>
         </form>
       </div>
     </div>
 
     <button data-open-client-modal data-testid="open-client-modal">Ajouter un client</button>
+
+    <table>
+      <tr>
+        <td>Elisa Toto</td>
+        <td>
+          <button data-open-client-detail data-client-id="7" data-client-full-name="Elisa Toto" data-client-email="toto@email.com" data-client-phone="">Modifier</button>
+        </td>
+      </tr>
+    </table>
 
     <div class="kitlast-planner__columns">
       <div class="kitlast-planner__column" data-planner-column data-planner-date="01/04">
@@ -150,6 +168,27 @@ describe('dashboard.js modals', () => {
     expect(clientModal.hasAttribute('hidden')).toBe(true);
     openButton.click();
     expect(clientModal.hasAttribute('hidden')).toBe(false);
+    // title should be 'Ajouter un client' when opened from add button
+    expect(document.getElementById('client-modal-title').textContent).toBe('Ajouter un client');
+  });
+
+  test('clicking modify pre-fills client modal and sets update action', () => {
+    const clientModal = document.querySelector('[data-testid="client-modal"]');
+    const modifyButton = document.querySelector('[data-open-client-detail]');
+
+    expect(clientModal.hasAttribute('hidden')).toBe(true);
+    modifyButton.click();
+
+    expect(clientModal.hasAttribute('hidden')).toBe(false);
+    // modal title should switch to edit mode
+    expect(document.getElementById('client-modal-title').textContent).toBe('Modifier un client');
+    // fields prefilled
+    expect(document.querySelector('input[name="first_name"]').value).toBe('Elisa');
+    expect(document.querySelector('input[name="last_name"]').value).toBe('Toto');
+    expect(document.querySelector('input[name="email"]').value).toBe('toto@email.com');
+    // hidden inputs
+    expect(document.querySelector('[data-client-form-action]').value).toBe('update_client');
+    expect(document.querySelector('[data-client-form-id]').value).toBe('7');
   });
 });
 

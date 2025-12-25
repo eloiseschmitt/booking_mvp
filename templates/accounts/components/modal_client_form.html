@@ -1,6 +1,7 @@
-<form method="post" action="{% url 'dashboard' %}?section=clients" class="kitlast-modal__form">
+<form method="post" action="{% url 'dashboard' %}?section=clients" class="kitlast-modal__form" data-client-form>
   {% csrf_token %}
-  <input type="hidden" name="action" value="add_client">
+  <input type="hidden" name="action" value="add_client" data-client-form-action>
+  <input type="hidden" name="client_id" value="" data-client-form-id>
   {{ client_form.linked_professional }}
   {% if client_form.non_field_errors %}
   <div class="kitlast-field__errors">

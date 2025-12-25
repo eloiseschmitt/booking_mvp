@@ -156,6 +156,17 @@ const initializeDashboard = () => {
   const eventModalHandlers = attachModalHandlers(eventModal);
   const newEventModalHandlers = attachModalHandlers(newEventModal);
   const clientModalHandlers = attachModalHandlers(clientModal);
+  const clientModalTitle = clientModal ? clientModal.querySelector('#client-modal-title') : null;
+
+  const clientDetailModal = document.querySelector('[data-client-detail-modal]');
+  const clientDetailModalHandlers = attachModalHandlers(clientDetailModal);
+  const clientDetailFieldMap = clientDetailModal
+    ? {
+      full_name: clientDetailModal.querySelector('[data-client-field="full_name"]'),
+      phone: clientDetailModal.querySelector('[data-client-field="phone"]'),
+      email: clientDetailModal.querySelector('[data-client-field="email"]'),
+    }
+    : null;
 
   const setActiveSection = (sectionName) => {
     if (!sectionContainer) return;
@@ -194,6 +205,73 @@ const initializeDashboard = () => {
       event.preventDefault();
     });
   });
+
+  // Open client modal in edit mode directly from table buttons
+  document.querySelectorAll('[data-open-client-detail]').forEach((button) => {
+    button.addEventListener('click', (event) => {
+      event.preventDefault();
+      const btn = event.currentTarget;
+      if (!clientModal) return;
+      const form = clientModal.querySelector('[data-client-form]');
+      if (!form) return;
+
+      const firstName = form.querySelector('input[name="first_name"]');
+      const lastName = form.querySelector('input[name="last_name"]');
+      const email = form.querySelector('input[name="email"]');
+      const phone = form.querySelector('input[name="phone_number"]');
+      const actionInput = form.querySelector('[data-client-form-action]');
+      const clientIdInput = form.querySelector('[data-client-form-id]');
+
+      // populate fields from data attributes on the button
+      const fullName = btn.dataset.clientFullName || '';
+      const [first, ...rest] = fullName.trim().split(' ');
+      const last = rest.join(' ');
+      if (firstName) firstName.value = first || '';
+      if (lastName) lastName.value = last || '';
+      if (email) email.value = btn.dataset.clientEmail || '';
+      if (phone) phone.value = btn.dataset.clientPhone && btn.dataset.clientPhone !== '—' ? btn.dataset.clientPhone : '';
+      if (actionInput) actionInput.value = 'update_client';
+      if (clientIdInput) clientIdInput.value = btn.dataset.clientId || '';
+      if (clientModalTitle) clientModalTitle.textContent = 'Modifier un client';
+
+      // open the client modal (edit mode)
+      clientModalHandlers?.open();
+    });
+  });
+
+  // Wire up Edit button inside client detail modal (opens clientModal in edit mode)
+  const clientDetailEditBtn = clientDetailModal ? clientDetailModal.querySelector('[data-client-detail-edit]') : null;
+  if (clientDetailEditBtn) {
+    clientDetailEditBtn.addEventListener('click', (evt) => {
+      evt.preventDefault();
+      const clientId = clientDetailModal?.dataset.clientId;
+      if (!clientModal) return;
+      // find fields in client modal form
+      const form = clientModal.querySelector('[data-client-form]');
+      if (!form) return;
+      const firstName = form.querySelector('input[name="first_name"]');
+      const lastName = form.querySelector('input[name="last_name"]');
+      const email = form.querySelector('input[name="email"]');
+      const phone = form.querySelector('input[name="phone_number"]');
+      const actionInput = form.querySelector('[data-client-form-action]');
+      const clientIdInput = form.querySelector('[data-client-form-id]');
+
+      // populate values from detail modal
+      const fullName = clientDetailModal.querySelector('[data-client-field="full_name"]').textContent || '';
+      const [first, ...rest] = fullName.trim().split(' ');
+      const last = rest.join(' ');
+
+      if (firstName) firstName.value = first || '';
+      if (lastName) lastName.value = last || '';
+      if (email) email.value = clientDetailModal.querySelector('[data-client-field="email"]').textContent.trim() || '';
+      if (phone) phone.value = clientDetailModal.querySelector('[data-client-field="phone"]').textContent.trim() || '';
+      if (actionInput) actionInput.value = 'update_client';
+      if (clientIdInput) clientIdInput.value = clientId || '';
+
+      clientDetailModalHandlers?.close();
+      clientModalHandlers?.open();
+    });
+  }
 
   document.addEventListener('keydown', (event) => {
     if (event.key !== 'Escape') {
@@ -582,6 +660,23 @@ const initializeDashboard = () => {
   document.querySelectorAll('[data-open-client-modal]').forEach((button) => {
     button.addEventListener('click', (event) => {
       event.preventDefault();
+      if (!clientModal) return;
+      const form = clientModal.querySelector('[data-client-form]');
+      if (form) {
+        const firstName = form.querySelector('input[name="first_name"]');
+        const lastName = form.querySelector('input[name="last_name"]');
+        const email = form.querySelector('input[name="email"]');
+        const phone = form.querySelector('input[name="phone_number"]');
+        const actionInput = form.querySelector('[data-client-form-action]');
+        const clientIdInput = form.querySelector('[data-client-form-id]');
+        if (firstName) firstName.value = '';
+        if (lastName) lastName.value = '';
+        if (email) email.value = '';
+        if (phone) phone.value = '';
+        if (actionInput) actionInput.value = 'add_client';
+        if (clientIdInput) clientIdInput.value = '';
+      }
+      if (clientModalTitle) clientModalTitle.textContent = 'Ajouter un client';
       clientModalHandlers?.open();
     });
   });

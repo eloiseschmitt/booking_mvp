@@ -1,7 +1,6 @@
 {% load modal_tags %}
 
-<section class="kitlast-content-section{% if section == 'clients' %} is-active{% endif %}"
-  data-section="clients">
+<section class="kitlast-content-section{% if section == 'clients' %} is-active{% endif %}" data-section="clients">
   <header class="kitlast-section-header">
     <div>
       <h2>Gestion des clients</h2>
@@ -33,10 +32,15 @@
             <a href="mailto:{{ client.email }}" class="kitlast-link">{{ client.email }}</a>
           </td>
           <td data-label="Modifier">
-            <button type="button" class="kitlast-service-line__action">Modifier</button>
+            <button type="button" class="kitlast-service-line__action" data-open-client-detail
+              data-client-id="{{ client.id }}" data-client-full-name="{{ client.full_name }}"
+              data-client-email="{{ client.email }}" data-client-phone="{{ client.phone }}">
+              Modifier
+            </button>
           </td>
           <td data-label="Supprimer">
-            <button type="button" class="kitlast-service-line__action kitlast-service-line__action--danger">Supprimer</button>
+            <button type="button"
+              class="kitlast-service-line__action kitlast-service-line__action--danger">Supprimer</button>
           </td>
         </tr>
         {% endfor %}
@@ -49,5 +53,95 @@
 </section>
 
 {% if is_professional %}
-  {% render_modal modal_data_attr='data-client-modal' modal_title='Ajouter un client' modal_title_id='client-modal-title' modal_body_template='accounts/components/modal_client_form.html' modal_should_show=show_client_modal %}
+<div class="kitlast-modal" data-client-modal {% if not show_client_modal|default:False %}hidden{% endif %}>
+  <div class="kitlast-modal__overlay" data-modal-close></div>
+  <div class="kitlast-modal__content" role="dialog" aria-modal="true" aria-labelledby="client-modal-title">
+    <header class="kitlast-modal__header">
+      <h2 id="client-modal-title">Ajouter un client</h2>
+      <button type="button" class="kitlast-modal__close" data-modal-close aria-label="Fermer la modale">×</button>
+    </header>
+    <div class="kitlast-modal__body">
+      <form method="post" action="{% url 'dashboard' %}?section=clients" class="kitlast-modal__form" data-client-form>
+        {% csrf_token %}
+        <input type="hidden" name="action" value="add_client" data-client-form-action>
+        <input type="hidden" name="client_id" value="" data-client-form-id>
+        {{ client_form.linked_professional }}
+        {% if client_form.non_field_errors %}
+        <div class="kitlast-field__errors">
+          {% for error in client_form.non_field_errors %}{{ error }}{% endfor %}
+        </div>
+        {% endif %}
+        <div class="kitlast-field">
+          {{ client_form.first_name.label_tag }}
+          {{ client_form.first_name }}
+          {% if client_form.first_name.errors %}
+          <div class="kitlast-field__errors">
+            {% for error in client_form.first_name.errors %}{{ error }}{% endfor %}
+          </div>
+          {% endif %}
+        </div>
+        <div class="kitlast-field">
+          {{ client_form.last_name.label_tag }}
+          {{ client_form.last_name }}
+          {% if client_form.last_name.errors %}
+          <div class="kitlast-field__errors">
+            {% for error in client_form.last_name.errors %}{{ error }}{% endfor %}
+          </div>
+          {% endif %}
+        </div>
+        <div class="kitlast-field">
+          {{ client_form.email.label_tag }}
+          {{ client_form.email }}
+          {% if client_form.email.errors %}
+          <div class="kitlast-field__errors">
+            {% for error in client_form.email.errors %}{{ error }}{% endfor %}
+          </div>
+          {% endif %}
+        </div>
+        <div class="kitlast-field">
+          {{ client_form.phone_number.label_tag }}
+          {{ client_form.phone_number }}
+          {% if client_form.phone_number.errors %}
+          <div class="kitlast-field__errors">
+            {% for error in client_form.phone_number.errors %}{{ error }}{% endfor %}
+          </div>
+          {% endif %}
+        </div>
+        <div class="kitlast-modal__actions">
+          <button type="button" class="kitlast-button kitlast-button--ghost" data-modal-close>Annuler</button>
+          <button type="submit" class="kitlast-button">Enregistrer</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
 {% endif %}
+
+<!-- Client detail modal (read-only) -->
+<div class="kitlast-modal" data-client-detail-modal hidden>
+  <div class="kitlast-modal__overlay" data-modal-close></div>
+  <div class="kitlast-modal__content" role="dialog" aria-modal="true" aria-labelledby="client-detail-modal-title">
+    <header class="kitlast-modal__header">
+      <h2 id="client-detail-modal-title">Détail du client</h2>
+      <button type="button" class="kitlast-modal__close" data-modal-close aria-label="Fermer la fenêtre">×</button>
+    </header>
+    <div class="kitlast-modal__body kitlast-event-modal__body">
+      <div class="kitlast-event-modal__row">
+        <span class="kitlast-event-modal__label">Nom &amp; prénom</span>
+        <span class="kitlast-event-modal__value" data-client-field="full_name">—</span>
+      </div>
+      <div class="kitlast-event-modal__row">
+        <span class="kitlast-event-modal__label">Téléphone</span>
+        <span class="kitlast-event-modal__value" data-client-field="phone">—</span>
+      </div>
+      <div class="kitlast-event-modal__row">
+        <span class="kitlast-event-modal__label">Email</span>
+        <span class="kitlast-event-modal__value" data-client-field="email">—</span>
+      </div>
+      <div class="kitlast-event-modal__actions">
+        <button type="button" class="kitlast-button" data-client-detail-edit>Éditer</button>
+        <button type="button" class="kitlast-button kitlast-button--ghost" data-modal-close>Fermer</button>
+      </div>
+    </div>
+  </div>
+</div>

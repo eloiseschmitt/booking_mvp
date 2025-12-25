@@ -134,6 +134,9 @@ class ClientForm(forms.ModelForm):
     def clean_email(self):
         """Reject duplicate email addresses."""
         email = self.cleaned_data["email"].lower()
-        if User.objects.filter(email=email).exists():
+        qs = User.objects.filter(email=email)
+        if self.instance and getattr(self.instance, 'pk', None):
+            qs = qs.exclude(pk=self.instance.pk)
+        if qs.exists():
             raise forms.ValidationError("Un utilisateur avec cet email existe déjà.")
         return email
