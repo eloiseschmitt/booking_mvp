@@ -159,6 +159,7 @@ def _build_event_view(
     date_label = start_local.strftime("%d/%m")
     service_model = service_lookup.get(event.title)
     service_name = service_model.name if service_model else event.title
+    price = str(service_model.price) if service_model and service_model.price is not None else ""
     category_name = (
         service_model.category.name if service_model and service_model.category else ""
     )
@@ -175,6 +176,7 @@ def _build_event_view(
         color=_event_colour(index),
         service=service_name,
         category=category_name,
+        price=price,
         description=event.description or "",
         status=event.get_status_display(),
         created_by=author,

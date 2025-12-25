@@ -1,5 +1,4 @@
-<section class="kitlast-content-section{% if section == 'planning' %} is-active{% endif %}"
-  data-section="planning">
+<section class="kitlast-content-section{% if section == 'planning' %} is-active{% endif %}" data-section="planning">
   <div class="kitlast-planner" style="--planner-row-count: {{ planner_hours|length|add:'-1' }}">
     <header class="kitlast-planner__header">
       <div class="kitlast-planner__header-left">
@@ -16,7 +15,8 @@
       </div>
       <nav class="kitlast-planner__toolbar" aria-label="Options de planification">
         <button type="button" class="kitlast-planner__button" data-planner-action="today">Aujourd’hui</button>
-        <button type="button" class="kitlast-planner__button kitlast-planner__button--empty" data-planner-action="day">Vue jour</button>
+        <button type="button" class="kitlast-planner__button kitlast-planner__button--empty"
+          data-planner-action="day">Vue jour</button>
         <button type="button" class="kitlast-planner__button" data-planner-action="week">Vue semaine</button>
       </nav>
     </header>
@@ -35,24 +35,19 @@
           </header>
           <div class="kitlast-planner__timeline">
             {% for event in day.events %}
-            <div class="kitlast-planner__event"
-              data-planner-event
-              data-event-id="{{ event.event_id }}"
-              data-event-label="{{ day.label }}"
-              data-event-date="{{ day.date }}"
-              data-event-time="{{ event.time }}"
-              data-event-title="{{ event.title|escape }}"
+            <div class="kitlast-planner__event" data-planner-event data-event-id="{{ event.event_id }}"
+              data-event-label="{{ day.label }}" data-event-date="{{ day.date }}" data-event-time="{{ event.time }}"
+              data-event-title="{{ event.service|escape }}"
               data-event-service="{{ event.service|default_if_none:''|escape }}"
+              data-event-price="{{ event.price|default_if_none:''|escape }}"
               data-event-category="{{ event.category|default_if_none:''|escape }}"
               data-event-description="{{ event.description|default_if_none:''|escape }}"
               data-event-status="{{ event.status|escape }}"
               data-event-created-by="{{ event.created_by|default_if_none:''|escape }}"
-              data-event-client="{{ event.client|default_if_none:''|escape }}"
-              data-event-start="{{ event.start }}"
+              data-event-client="{{ event.client|default_if_none:''|escape }}" data-event-start="{{ event.start }}"
               data-event-end="{{ event.end }}"
               style="top: {{ event.top_pct }}%; height: {{ event.height_pct }}%; background-color: {{ event.color }};">
-              <span class="kitlast-planner__event-time">{{ event.time }}</span>
-              <span class="kitlast-planner__event-title">{{ event.title }}</span>
+              <span class="kitlast-planner__event-title">{{ event.service }}</span>
             </div>
             {% endfor %}
           </div>
@@ -70,7 +65,8 @@
       <h2 id="event-modal-title">Détail du rendez-vous</h2>
       <button type="button" class="kitlast-modal__close" data-modal-close aria-label="Fermer la fenêtre">×</button>
     </header>
-    <form method="post" action="{% url 'dashboard' %}?section=planning" class="kitlast-modal__body kitlast-event-modal__body kitlast-modal__form">
+    <form method="post" action="{% url 'dashboard' %}?section=planning"
+      class="kitlast-modal__body kitlast-event-modal__body kitlast-modal__form">
       {% csrf_token %}
       <input type="hidden" name="action" value="delete_event">
       <input type="hidden" name="event_id" data-event-field="event-id">
@@ -89,6 +85,10 @@
       <div class="kitlast-event-modal__row">
         <span class="kitlast-event-modal__label">Prestation</span>
         <span class="kitlast-event-modal__value" data-event-field="service">—</span>
+      </div>
+      <div class="kitlast-event-modal__row">
+        <span class="kitlast-event-modal__label">Prix</span>
+        <span class="kitlast-event-modal__value" data-event-field="price">—</span>
       </div>
       <div class="kitlast-event-modal__row">
         <span class="kitlast-event-modal__label">Catégorie</span>
@@ -126,7 +126,8 @@
       <h2 id="new-event-modal-title">Créer un rendez-vous</h2>
       <button type="button" class="kitlast-modal__close" data-modal-close aria-label="Fermer la fenêtre">×</button>
     </header>
-    <form method="post" action="{% url 'dashboard' %}?section=planning" class="kitlast-modal__body kitlast-event-modal__body kitlast-modal__form" data-new-event-form>
+    <form method="post" action="{% url 'dashboard' %}?section=planning"
+      class="kitlast-modal__body kitlast-event-modal__body kitlast-modal__form" data-new-event-form>
       {% csrf_token %}
       <input type="hidden" name="action" value="add_event">
       <input type="hidden" name="start_at" data-new-event-field="start-input">
@@ -139,12 +140,14 @@
         <span class="kitlast-event-modal__label">Horaire</span>
         <div class="kitlast-event-modal__value kitlast-event-modal__value--inline">
           <label class="kitlast-sr-only" for="new-event-start">Heure de début</label>
-          <select id="new-event-start" class="kitlast-input kitlast-input--inline" data-new-event-field="start-select" name="start_time">
+          <select id="new-event-start" class="kitlast-input kitlast-input--inline" data-new-event-field="start-select"
+            name="start_time">
             <option value="">—</option>
           </select>
           <span class="kitlast-event-modal__separator">à</span>
           <label class="kitlast-sr-only" for="new-event-end">Heure de fin</label>
-          <select id="new-event-end" class="kitlast-input kitlast-input--inline" data-new-event-field="end-select" name="end_time">
+          <select id="new-event-end" class="kitlast-input kitlast-input--inline" data-new-event-field="end-select"
+            name="end_time">
             <option value="">—</option>
           </select>
           <span class="kitlast-event-modal__value kitlast-event-modal__value--time" data-new-event-field="time">—</span>
@@ -153,9 +156,8 @@
       <div class="kitlast-event-modal__row">
         <label class="kitlast-event-modal__label" for="new-event-service">Prestation</label>
         <div class="kitlast-event-modal__value">
-          <select id="new-event-service" class="kitlast-input" data-new-event-field="service"
-            name="service_id"
-            {% if not user_services %}disabled{% endif %}>
+          <select id="new-event-service" class="kitlast-input" data-new-event-field="service" name="service_id"
+                  {% if not user_services %}disabled{% endif %}>
             <option value="">Sélectionnez une prestation</option>
             {% for service in user_services %}
             <option value="{{ service.id }}">{{ service.name }}</option>
@@ -168,9 +170,8 @@
       <div class="kitlast-event-modal__row">
         <label class="kitlast-event-modal__label" for="new-event-client">Client</label>
         <div class="kitlast-event-modal__value">
-          <select id="new-event-client" class="kitlast-input" data-new-event-field="client"
-            name="client_id"
-            {% if not client_options %}disabled{% endif %}>
+          <select id="new-event-client" class="kitlast-input" data-new-event-field="client" name="client_id"
+                  {% if not client_options %}disabled{% endif %}>
             <option value="">Sélectionnez un client</option>
             {% for client in client_options %}
             <option value="{{ client.id }}">{{ client.label }}</option>
@@ -182,7 +183,8 @@
       </div>
       <div class="kitlast-event-modal__row kitlast-event-modal__row--description">
         <span class="kitlast-event-modal__label">Instructions</span>
-        <span class="kitlast-event-modal__value" data-new-event-field="message">Choisissez « Ajouter un événement » pour planifier une nouvelle réservation à cet horaire.</span>
+        <span class="kitlast-event-modal__value" data-new-event-field="message">Choisissez « Ajouter un événement » pour
+          planifier une nouvelle réservation à cet horaire.</span>
       </div>
       <div class="kitlast-event-modal__actions">
         <button type="submit" class="kitlast-button" data-new-event-submit disabled>Ajouter un événement</button>

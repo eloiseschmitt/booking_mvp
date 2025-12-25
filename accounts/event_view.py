@@ -17,6 +17,7 @@ class EventView(NamedTuple):
     service: str
     category: str
     description: str
+    price: str
     status: str
     created_by: str
     client: str

@@ -21,6 +21,7 @@ const initializeDashboard = () => {
       time: eventModal.querySelector('[data-event-field="time"]'),
       title: eventModal.querySelector('[data-event-field="title"]'),
       service: eventModal.querySelector('[data-event-field="service"]'),
+      price: eventModal.querySelector('[data-event-field="price"]'),
       category: eventModal.querySelector('[data-event-field="category"]'),
       status: eventModal.querySelector('[data-event-field="status"]'),
       created_by: eventModal.querySelector('[data-event-field="created_by"]'),
@@ -44,16 +45,16 @@ const initializeDashboard = () => {
 
   const newEventFieldMap = newEventModal
     ? {
-        date: newEventModal.querySelector('[data-new-event-field="date"]'),
-        time: newEventModal.querySelector('[data-new-event-field="time"]'),
-        startSelect: newEventModal.querySelector('[data-new-event-field="start-select"]'),
-        endSelect: newEventModal.querySelector('[data-new-event-field="end-select"]'),
-        message: newEventModal.querySelector('[data-new-event-field="message"]'),
-        service: newEventModal.querySelector('[data-new-event-field="service"]'),
-        client: newEventModal.querySelector('[data-new-event-field="client"]'),
-        startInput: newEventModal.querySelector('[data-new-event-field="start-input"]'),
-        endInput: newEventModal.querySelector('[data-new-event-field="end-input"]'),
-      }
+      date: newEventModal.querySelector('[data-new-event-field="date"]'),
+      time: newEventModal.querySelector('[data-new-event-field="time"]'),
+      startSelect: newEventModal.querySelector('[data-new-event-field="start-select"]'),
+      endSelect: newEventModal.querySelector('[data-new-event-field="end-select"]'),
+      message: newEventModal.querySelector('[data-new-event-field="message"]'),
+      service: newEventModal.querySelector('[data-new-event-field="service"]'),
+      client: newEventModal.querySelector('[data-new-event-field="client"]'),
+      startInput: newEventModal.querySelector('[data-new-event-field="start-input"]'),
+      endInput: newEventModal.querySelector('[data-new-event-field="end-input"]'),
+    }
     : null;
   const plannerColumnsContainer = document.querySelector('.kitlast-planner__columns');
   const plannerColumns = plannerColumnsContainer ? Array.from(plannerColumnsContainer.querySelectorAll('[data-planner-column]')) : [];
@@ -221,9 +222,9 @@ const initializeDashboard = () => {
       const target = event.target;
       if (!(target instanceof Element)) {
         return;
-    }
-    const modalContainer = target.closest('.kitlast-modal');
-    const explicitCloser = target.closest('[data-modal-close]');
+      }
+      const modalContainer = target.closest('.kitlast-modal');
+      const explicitCloser = target.closest('[data-modal-close]');
 
       if (explicitCloser && modalContainer) {
         event.preventDefault();
@@ -269,6 +270,18 @@ const initializeDashboard = () => {
     eventFieldMap.time.textContent = data.time || fallback;
     eventFieldMap.title.textContent = data.title || fallback;
     eventFieldMap.service.textContent = data.service || fallback;
+    if (eventFieldMap.price) {
+      if (data.price) {
+        const parsed = Number(String(data.price).replace(',', '.'));
+        if (!Number.isNaN(parsed)) {
+          eventFieldMap.price.textContent = new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(parsed);
+        } else {
+          eventFieldMap.price.textContent = data.price;
+        }
+      } else {
+        eventFieldMap.price.textContent = fallback;
+      }
+    }
     eventFieldMap.category.textContent = data.category || fallback;
     eventFieldMap.status.textContent = data.status || fallback;
     eventFieldMap.created_by.textContent = data.created_by || fallback;
@@ -491,6 +504,7 @@ const initializeDashboard = () => {
           time: card.dataset.eventTime,
           title: card.dataset.eventTitle,
           service: card.dataset.eventService,
+          price: card.dataset.eventPrice,
           category: card.dataset.eventCategory,
           description: card.dataset.eventDescription,
           status: card.dataset.eventStatus,
