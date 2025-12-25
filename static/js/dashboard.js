@@ -273,6 +273,23 @@ const initializeDashboard = () => {
     });
   }
 
+  // Client delete confirmation modal
+  const clientDeleteModal = document.querySelector('[data-client-delete-modal]');
+  const clientDeleteModalHandlers = attachModalHandlers(clientDeleteModal);
+  const clientDeleteName = clientDeleteModal ? clientDeleteModal.querySelector('[data-client-delete-name]') : null;
+  const clientDeleteIdInput = clientDeleteModal ? clientDeleteModal.querySelector('[data-client-delete-id]') : null;
+
+  document.querySelectorAll('[data-client-delete]').forEach((btn) => {
+    btn.addEventListener('click', (evt) => {
+      evt.preventDefault();
+      const id = btn.dataset.clientId;
+      const name = btn.dataset.clientFullName || '';
+      if (clientDeleteName) clientDeleteName.textContent = name;
+      if (clientDeleteIdInput) clientDeleteIdInput.value = id || '';
+      clientDeleteModalHandlers?.open();
+    });
+  });
+
   document.addEventListener('keydown', (event) => {
     if (event.key !== 'Escape') {
       return;

@@ -39,8 +39,10 @@
             </button>
           </td>
           <td data-label="Supprimer">
-            <button type="button"
-              class="kitlast-service-line__action kitlast-service-line__action--danger">Supprimer</button>
+            <button type="button" class="kitlast-service-line__action kitlast-service-line__action--danger"
+              data-client-delete data-client-id="{{ client.id }}" data-client-full-name="{{ client.full_name }}">
+              Supprimer
+            </button>
           </td>
         </tr>
         {% endfor %}
@@ -142,6 +144,28 @@
         <button type="button" class="kitlast-button" data-client-detail-edit>Éditer</button>
         <button type="button" class="kitlast-button kitlast-button--ghost" data-modal-close>Fermer</button>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- Client delete confirmation modal -->
+<div class="kitlast-modal" data-client-delete-modal hidden>
+  <div class="kitlast-modal__overlay" data-modal-close></div>
+  <div class="kitlast-modal__content" role="dialog" aria-modal="true" aria-labelledby="client-delete-modal-title">
+    <header class="kitlast-modal__header">
+      <h2 id="client-delete-modal-title">Supprimer le client</h2>
+      <button type="button" class="kitlast-modal__close" data-modal-close aria-label="Fermer la fenêtre">×</button>
+    </header>
+    <div class="kitlast-modal__body kitlast-event-modal__body">
+      <p>Souhaitez-vous supprimer ce client ? <strong data-client-delete-name>—</strong></p>
+      <form method="post" action="{% url 'dashboard' %}?section=clients" class="kitlast-modal__actions"
+        data-client-delete-form>
+        {% csrf_token %}
+        <input type="hidden" name="action" value="delete_client">
+        <input type="hidden" name="client_id" value="" data-client-delete-id>
+        <button type="submit" class="kitlast-button kitlast-button--danger">Valider</button>
+        <button type="button" class="kitlast-button kitlast-button--ghost" data-modal-close>Annuler</button>
+      </form>
     </div>
   </div>
 </div>

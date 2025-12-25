@@ -96,9 +96,22 @@ const buildDom = () => {
         <td>Elisa Toto</td>
         <td>
           <button data-open-client-detail data-client-id="7" data-client-full-name="Elisa Toto" data-client-email="toto@email.com" data-client-phone="">Modifier</button>
+          <button data-client-delete data-client-id="7" data-client-full-name="Elisa Toto">Supprimer</button>
         </td>
       </tr>
     </table>
+
+    <div class="kitlast-modal" data-client-delete-modal hidden>
+      <div class="kitlast-modal__overlay" data-modal-close></div>
+      <div class="kitlast-modal__content">
+        <p>Souhaitez-vous supprimer <span data-client-delete-name></span> ?</p>
+        <form>
+          <input type="hidden" name="client_id" data-client-delete-id value="">
+          <button type="submit" data-client-delete-confirm>Confirmer</button>
+          <button type="button" data-modal-close>Annuler</button>
+        </form>
+      </div>
+    </div>
 
     <div class="kitlast-planner__columns">
       <div class="kitlast-planner__column" data-planner-column data-planner-date="01/04">
@@ -189,6 +202,18 @@ describe('dashboard.js modals', () => {
     // hidden inputs
     expect(document.querySelector('[data-client-form-action]').value).toBe('update_client');
     expect(document.querySelector('[data-client-form-id]').value).toBe('7');
+  });
+
+  test('clicking delete opens confirmation modal and fills name and id', () => {
+    const deleteModal = document.querySelector('[data-client-delete-modal]');
+    const deleteButton = document.querySelector('[data-client-delete]');
+
+    expect(deleteModal.hasAttribute('hidden')).toBe(true);
+    deleteButton.click();
+
+    expect(deleteModal.hasAttribute('hidden')).toBe(false);
+    expect(document.querySelector('[data-client-delete-name]').textContent).toBe('Elisa Toto');
+    expect(document.querySelector('[data-client-delete-id]').value).toBe('7');
   });
 });
 

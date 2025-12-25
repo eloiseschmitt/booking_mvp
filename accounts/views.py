@@ -182,6 +182,28 @@ def _handle_update_client(request, state):
     return None
 
 
+def _handle_delete_client(request, state):
+    """Delete a client linked to the professional."""
+    state["section"] = "clients"
+    client_id = _safe_int(request.POST.get("client_id"))
+    if not client_id:
+        messages.error(request, "Client introuvable.")
+        return None
+
+    client = User.objects.filter(
+        pk=client_id,
+        linked_professional=request.user,
+        user_type=User.UserType.INDIVIDUAL,
+    ).first()
+    if not client:
+        messages.error(request, "Client introuvable ou non autorisé.")
+        return None
+
+    client.delete()
+    messages.success(request, "Le client a été supprimé.")
+    return redirect(f"{reverse('dashboard')}?section=clients")
+
+
 def _handle_add_event(request, state):
     """Create a calendar event from the planning modal."""
     state["section"] = "planning"
@@ -363,6 +385,7 @@ DASHBOARD_ACTION_HANDLERS = {
     "delete_service": _handle_delete_service,
     "add_client": _handle_add_client,
     "update_client": _handle_update_client,
+    "delete_client": _handle_delete_client,
     "add_event": _handle_add_event,
     "delete_event": _handle_delete_event,
 }
