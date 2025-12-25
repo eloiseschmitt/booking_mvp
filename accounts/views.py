@@ -45,7 +45,6 @@ def _parse_iso_datetime(value: str | None) -> datetime | None:
     # Drop the client-provided offset to keep the local value exactly as entered.
     naive_local = parsed.replace(tzinfo=None)
     return timezone.make_aware(naive_local, timezone.get_current_timezone())
-    return parsed
 
 
 def _initialize_dashboard_state(request):
@@ -194,6 +193,40 @@ def _handle_add_event(request, state):
     return None
 
 
+def _handle_delete_event(request, state):
+    """Delete an existing event owned by the professional."""
+
+    state["section"] = "planning"
+    if not request.user.is_authenticated:
+        return redirect("login")
+    if not request.user.is_professional:
+        messages.error(
+            request, "Vous devez être un professionnel pour gérer vos rendez-vous."
+        )
+        return None
+
+    event_id = _safe_int(request.POST.get("event_id"))
+    if not event_id:
+        messages.error(request, "Rendez-vous introuvable.")
+        return None
+
+    event = (
+        Event.objects.select_related("calendar", "calendar__owner")
+        .filter(pk=event_id, calendar__owner=request.user)
+        .first()
+    )
+    if not event:
+        messages.error(
+            request,
+            "Vous ne pouvez supprimer que les rendez-vous appartenant à votre agenda.",
+        )
+        return None
+
+    event.delete()
+    messages.success(request, "Le rendez-vous a été supprimé.")
+    return redirect(f"{reverse('dashboard')}?section=planning")
+
+
 def _dispatch_dashboard_action(request, state) -> HttpResponse | None:
     """Invoke the handler that matches the submitted dashboard action."""
     action = request.POST.get("action")
@@ -303,6 +336,7 @@ DASHBOARD_ACTION_HANDLERS = {
     "delete_service": _handle_delete_service,
     "add_client": _handle_add_client,
     "add_event": _handle_add_event,
+    "delete_event": _handle_delete_event,
 }
 
 

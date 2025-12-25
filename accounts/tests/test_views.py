@@ -198,6 +198,32 @@ class DashboardViewTests(TestCase):
             EventAttendee.objects.filter(event=event, user=self.client_user).exists()
         )
 
+    def test_dashboard_post_delete_event_removes_event(self):
+        self.login()
+        service = Service.objects.create(
+            category=Category.objects.create(name="Coupe"),
+            name="Brushing",
+            duration_minutes=45,
+            created_by=self.user,
+        )
+        event = Event.objects.create(
+            calendar=self.calendar,
+            title=service.name,
+            description="Test",
+            start_at=timezone.now(),
+            end_at=timezone.now() + timedelta(hours=1),
+            created_by=self.user,
+        )
+        EventAttendee.objects.create(event=event, user=self.client_user)
+
+        response = self.client.post(
+            f"{self.url}?section=planning",
+            {"action": "delete_event", "event_id": str(event.pk)},
+        )
+
+        self.assertRedirects(response, f"{self.url}?section=planning")
+        self.assertFalse(Event.objects.filter(pk=event.pk).exists())
+
 
 class DashboardViewIndividualTests(TestCase):
     def setUp(self):
@@ -263,6 +289,29 @@ class DashboardViewIndividualTests(TestCase):
         self.assertEqual(Event.objects.count(), initial_count)
         self.assertFalse(Event.objects.filter(created_by=self.user).exists())
         self.assertFalse(response.context["is_professional"])
+
+    def test_individual_cannot_delete_event(self):
+        self.login()
+        pro_calendar = Calendar.objects.create(
+            owner=self.professional,
+            name="Agenda pro",
+            slug=f"agenda-{self.professional.pk}",
+        )
+        event = Event.objects.create(
+            calendar=pro_calendar,
+            title="Test",
+            start_at=timezone.now(),
+            end_at=timezone.now() + timedelta(hours=1),
+            created_by=self.professional,
+        )
+
+        response = self.client.post(
+            f"{self.url}?section=planning",
+            {"action": "delete_event", "event_id": str(event.pk)},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(Event.objects.filter(pk=event.pk).exists())
 
     def test_clients_section_for_individuals_has_no_clients(self):
         self.login()

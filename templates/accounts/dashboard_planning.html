@@ -37,6 +37,7 @@
             {% for event in day.events %}
             <div class="kitlast-planner__event"
               data-planner-event
+              data-event-id="{{ event.event_id }}"
               data-event-label="{{ day.label }}"
               data-event-date="{{ day.date }}"
               data-event-time="{{ event.time }}"
@@ -69,10 +70,10 @@
       <h2 id="event-modal-title">Détail du rendez-vous</h2>
       <button type="button" class="kitlast-modal__close" data-modal-close aria-label="Fermer la fenêtre">×</button>
     </header>
-    <form method="post" action="{% url 'dashboard' %}?section=planning" class="kitlast-modal__body kitlast-event-modal__body kitlast-modal__form" data-new-event-form>
+    <form method="post" action="{% url 'dashboard' %}?section=planning" class="kitlast-modal__body kitlast-event-modal__body kitlast-modal__form">
       {% csrf_token %}
-      <input type="hidden" name="action" value="add_event">
-      <input type="hidden" name="start_at" data-new-event-field="start-input">
+      <input type="hidden" name="action" value="delete_event">
+      <input type="hidden" name="event_id" data-event-field="event-id">
       <div class="kitlast-event-modal__row">
         <span class="kitlast-event-modal__label">Date</span>
         <span class="kitlast-event-modal__value" data-event-field="date">—</span>
@@ -110,7 +111,7 @@
         <span class="kitlast-event-modal__value" data-event-field="description">—</span>
       </div>
       <div class="kitlast-event-modal__actions">
-        <button type="button" class="kitlast-button kitlast-button--danger" data-event-delete>
+        <button type="submit" class="kitlast-button kitlast-button--danger" data-event-delete>
           Supprimer
         </button>
       </div>

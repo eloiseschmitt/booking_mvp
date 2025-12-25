@@ -8,6 +8,7 @@ from typing import NamedTuple
 class EventView(NamedTuple):
     """Structured data returned to the planner template for each event."""
 
+    event_id: int
     label: str
     date: str
     time: str

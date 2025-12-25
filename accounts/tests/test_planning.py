@@ -6,7 +6,7 @@ from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.utils import timezone
 
-from accounts.models import Calendar, Category, EventAttendee, Service
+from accounts.models import Calendar, Category, Event, EventAttendee, Service
 from accounts.planning import _compute_block, build_calendar_events
 
 
@@ -120,7 +120,7 @@ class BuildCalendarEventsTests(TestCase):
             user_type=get_user_model().UserType.INDIVIDUAL,
             linked_professional=self.user,
         )
-        event = calendar.events.create(
+        event_obj = calendar.events.create(
             title=service.name,
             description="Detailed description",
             start_at=start,
@@ -128,17 +128,18 @@ class BuildCalendarEventsTests(TestCase):
             status="confirmed",
             created_by=self.user,
         )
-        EventAttendee.objects.create(event=event, user=client)
+        EventAttendee.objects.create(event=event_obj, user=client)
 
         data = build_calendar_events(calendar)
-        event = next(day["events"][0] for day in data if day["events"])
+        event_data = next(day["events"][0] for day in data if day["events"])
 
-        self.assertEqual(event["service"], service.name)
-        self.assertEqual(event["category"], category.name)
-        self.assertEqual(event["created_by"], "Romy Ford")
-        self.assertIn("Romy Ford", event["title"])
-        self.assertEqual(event["client"], "Lena Client")
-        self.assertEqual(event["status"], "Confirmed")
-        self.assertTrue(event["time"].startswith("09:00"))
-        self.assertIn("start", event)
-        self.assertIn("top_pct", event)
+        self.assertEqual(event_data["service"], service.name)
+        self.assertEqual(event_data["category"], category.name)
+        self.assertEqual(event_data["created_by"], "Romy Ford")
+        self.assertIn("Romy Ford", event_data["title"])
+        self.assertEqual(event_data["client"], "Lena Client")
+        self.assertEqual(event_data["event_id"], event_obj.pk)
+        self.assertEqual(event_data["status"], "Confirmed")
+        self.assertTrue(event_data["time"].startswith("09:00"))
+        self.assertIn("start", event_data)
+        self.assertIn("top_pct", event_data)

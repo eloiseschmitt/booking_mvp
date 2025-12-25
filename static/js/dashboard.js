@@ -13,6 +13,8 @@ const initializeDashboard = () => {
   const clientModal = document.querySelector('[data-client-modal]');
   const categoryFormField = categoryModal ? categoryModal.querySelector('input[type="text"]') : null;
   const serviceNameField = serviceModal ? serviceModal.querySelector('input[name="name"]') : null;
+  let activeEventCard = null;
+
   const eventFieldMap = eventModal
     ? {
       date: eventModal.querySelector('[data-event-field="date"]'),
@@ -23,6 +25,7 @@ const initializeDashboard = () => {
       status: eventModal.querySelector('[data-event-field="status"]'),
       created_by: eventModal.querySelector('[data-event-field="created_by"]'),
       client: eventModal.querySelector('[data-event-field="client"]'),
+      eventId: eventModal.querySelector('[data-event-field="event-id"]'),
       description: eventModal.querySelector('[data-event-field="description"]'),
       deleteButton: eventModal.querySelector('[data-event-delete]'),
     }
@@ -230,7 +233,6 @@ const initializeDashboard = () => {
       }
 
       if (modalContainer && target === modalContainer) {
-        console.log('backdrop close');
         event.preventDefault();
         event.stopPropagation();
       }
@@ -272,6 +274,9 @@ const initializeDashboard = () => {
     eventFieldMap.created_by.textContent = data.created_by || fallback;
     if (eventFieldMap.client) {
       eventFieldMap.client.textContent = data.client || fallback;
+    }
+    if (eventFieldMap.eventId) {
+      eventFieldMap.eventId.value = data.event_id || '';
     }
     eventFieldMap.description.textContent = data.description || fallback;
     if (eventFieldMap.deleteButton) {
@@ -491,10 +496,12 @@ const initializeDashboard = () => {
           status: card.dataset.eventStatus,
           created_by: card.dataset.eventCreatedBy,
           client: card.dataset.eventClient,
+          event_id: card.dataset.eventId,
           start: card.dataset.eventStart,
           end: card.dataset.eventEnd,
         });
         eventModalHandlers.open();
+        activeEventCard = card;
         return;
       }
 
@@ -571,6 +578,17 @@ const initializeDashboard = () => {
   newEventFieldMap?.client?.addEventListener('change', () => {
     updateNewEventSubmitState();
   });
+
+  const eventDeleteForm = eventModal ? eventModal.querySelector('form') : null;
+  if (eventFieldMap?.deleteButton && eventDeleteForm) {
+    eventFieldMap.deleteButton.addEventListener('click', () => {
+      if (!eventFieldMap.eventId?.value) {
+        return;
+      }
+      eventDeleteForm.submit();
+    });
+  }
+
 };
 
 document.addEventListener('DOMContentLoaded', () => {

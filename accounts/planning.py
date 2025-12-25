@@ -167,6 +167,7 @@ def _build_event_view(
     display_title = f"{author} · {service_name}" if author else service_name
 
     return EventView(
+        event_id=event.pk,
         label=label,
         date=date_label,
         time=_format_time_range(start_local, end_local),
