@@ -108,7 +108,9 @@ def build_dashboard_context(user, state, week_offset: int) -> dict:
         categories = Category.objects.none()
 
     today = timezone.localdate()
-    start_of_week = today - timedelta(days=today.weekday()) + timedelta(weeks=week_offset)
+    start_of_week = (
+        today - timedelta(days=today.weekday()) + timedelta(weeks=week_offset)
+    )
     end_of_week = start_of_week + timedelta(days=6)
     planner_week_summary = (
         f"Semaine {start_of_week.isocalendar().week} · "

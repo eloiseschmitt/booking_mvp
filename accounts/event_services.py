@@ -2,14 +2,15 @@
 
 Extracted from views to keep handlers thin and testable.
 """
+
 from datetime import datetime, timedelta
 
 from django.utils import timezone
 
-from .models import Event, EventAttendee, Service
-from django.contrib.auth import get_user_model
+from users.models import User
+from users.models import User as UserModel
 
-User = get_user_model()
+from .models import Event, EventAttendee, Service
 
 
 def _parse_iso_datetime(value: str | None) -> datetime | None:
@@ -26,7 +27,9 @@ def _parse_iso_datetime(value: str | None) -> datetime | None:
     return timezone.make_aware(naive_local, timezone.get_current_timezone())
 
 
-def create_event(user: User, calendar, start_at_raw: str, end_at_raw: str, service_id, client_id):
+def create_event(
+    user: UserModel, calendar, start_at_raw: str, end_at_raw: str, service_id, client_id
+):
     """Create an Event and EventAttendee if valid.
 
     Returns (True, event) on success or (False, message) on failure.
@@ -66,7 +69,7 @@ def create_event(user: User, calendar, start_at_raw: str, end_at_raw: str, servi
     return True, event
 
 
-def delete_event(user: User, event_id):
+def delete_event(user: UserModel, event_id):
     """Delete an event owned by the user's calendar.
 
     Returns (True, None) on success or (False, message) on failure.

@@ -7,17 +7,18 @@ from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 
+from .client_services import create_client, update_client
+from .client_services import delete_client as service_delete_client
 from .dashboard_services import build_dashboard_context, initialize_dashboard_state
+from .event_services import create_event, delete_event
 from .forms import CategoryForm, ClientForm, EventForm, ServiceForm
-from .models import Category, Workshop
+from .models import Workshop
 from .services import (
     delete_service,
     prepare_service_form,
     save_category_form,
     save_service_form,
 )
-from .client_services import create_client, update_client, delete_client as service_delete_client
-from .event_services import create_event, delete_event
 from .utils import ensure_user_calendar
 
 
@@ -154,7 +155,11 @@ def _handle_add_event(request, state):
     if success:
         return redirect(f"{reverse('dashboard')}?section=planning")
 
-    messages.error(request, result or "Impossible de créer le rendez-vous. Vérifiez les informations fournies.")
+    messages.error(
+        request,
+        result
+        or "Impossible de créer le rendez-vous. Vérifiez les informations fournies.",
+    )
     return None
 
 
@@ -178,7 +183,8 @@ def _handle_delete_event(request, state):
     if not success:
         messages.error(
             request,
-            message or "Vous ne pouvez supprimer que les rendez-vous appartenant à votre agenda.",
+            message
+            or "Vous ne pouvez supprimer que les rendez-vous appartenant à votre agenda.",
         )
         return None
 

@@ -2,7 +2,6 @@
 
 These keep business logic out of the views so handlers remain thin.
 """
-from typing import Tuple
 
 from django.contrib.auth import get_user_model
 from django.utils.crypto import get_random_string
@@ -12,7 +11,7 @@ from .forms import ClientForm
 User = get_user_model()
 
 
-def create_client(user, data) -> Tuple[bool, object]:
+def create_client(user, data) -> tuple[bool, object]:
     """Create a client linked to `user`.
 
     Returns (True, client) on success or (False, form) on failure.
@@ -38,7 +37,7 @@ def create_client(user, data) -> Tuple[bool, object]:
     return False, form
 
 
-def update_client(user, client_id, data) -> Tuple[bool, object]:
+def update_client(user, client_id, data) -> tuple[bool, object]:
     """Update a client linked to `user`.
 
     Returns (True, client) on success, (False, form) if validation fails,
@@ -55,7 +54,9 @@ def update_client(user, client_id, data) -> Tuple[bool, object]:
     bound = data.copy()
     # Ensure linked_professional is preserved when not provided in the form data
     if "linked_professional" not in bound or not bound.get("linked_professional"):
-        bound["linked_professional"] = client.linked_professional.pk if client.linked_professional else ""
+        bound["linked_professional"] = (
+            client.linked_professional.pk if client.linked_professional else ""
+        )
     form = ClientForm(bound, instance=client)
     if form.is_valid():
         form.save()
@@ -63,7 +64,7 @@ def update_client(user, client_id, data) -> Tuple[bool, object]:
     return False, form
 
 
-def delete_client(user, client_id) -> Tuple[bool, str | None]:
+def delete_client(user, client_id) -> tuple[bool, str | None]:
     """Delete a client linked to `user`.
 
     Returns (True, None) on success, or (False, message) on failure.
