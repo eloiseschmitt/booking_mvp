@@ -140,3 +140,12 @@ class ClientForm(forms.ModelForm):
         if qs.exists():
             raise forms.ValidationError("Un utilisateur avec cet email existe déjà.")
         return email
+
+
+class EventForm(forms.Form):
+    """Form used to validate event creation payloads."""
+
+    start_at = forms.CharField(required=True)
+    end_at = forms.CharField(required=True)
+    service_id = forms.IntegerField(required=True)
+    client_id = forms.IntegerField(required=True)

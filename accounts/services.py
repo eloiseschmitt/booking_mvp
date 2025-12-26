@@ -5,7 +5,7 @@ from typing import Any
 from django.db import transaction
 from django.shortcuts import get_object_or_404
 
-from .forms import ServiceForm
+from .forms import CategoryForm, ServiceForm
 from .models import Service
 
 
@@ -44,3 +44,11 @@ def delete_service(service_id: int) -> Service:
     service = get_object_or_404(Service, pk=service_id)
     service.delete()
     return service
+
+
+def save_category_form(form: CategoryForm):
+    """Persist a valid category form."""
+    if not form.is_valid():
+        return False, form
+    form.save()
+    return True, form

@@ -88,7 +88,8 @@ class DashboardViewTests(TestCase):
         mock_form = MagicMock()
 
         with patch(
-            "accounts.views.prepare_service_form", return_value=(mock_form, object())
+            "accounts.dashboard_services.prepare_service_form",
+            return_value=(mock_form, object()),
         ) as mocked_prepare:
             response = self.client.get(self.url, {"service_id": "42"})
 

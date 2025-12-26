@@ -1,24 +1,24 @@
 """Views for the accounts application."""
 
-from datetime import datetime, timedelta
-
 from django.contrib import messages
-from django.contrib.auth import get_user_model, logout
+from django.contrib.auth import logout
 from django.contrib.auth.decorators import login_required
-from django.db.models import Prefetch
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
-from django.utils import timezone
-from django.utils.crypto import get_random_string
 
-from .forms import CategoryForm, ClientForm, ServiceForm
-from .models import Category, Event, EventAttendee, Service, Workshop
-from .planning import PLANNER_HOURS, build_calendar_events
-from .services import delete_service, prepare_service_form, save_service_form
+from .dashboard_services import build_dashboard_context, initialize_dashboard_state
+from .forms import CategoryForm, ClientForm, EventForm, ServiceForm
+from .models import Category, Workshop
+from .services import (
+    delete_service,
+    prepare_service_form,
+    save_category_form,
+    save_service_form,
+)
+from .client_services import create_client, update_client, delete_client as service_delete_client
+from .event_services import create_event, delete_event
 from .utils import ensure_user_calendar
-
-User = get_user_model()
 
 
 def _safe_int(value: str | None) -> int | None:
@@ -29,67 +29,14 @@ def _safe_int(value: str | None) -> int | None:
         return None
 
 
-def _parse_iso_datetime(value: str | None) -> datetime | None:
-    """Parse ISO datetime strings and return aware datetimes."""
-    if not value:
-        return None
-    try:
-        parsed = datetime.fromisoformat(value)
-    except (TypeError, ValueError):
-        return None
-    if timezone.is_naive(parsed):
-        return timezone.make_aware(parsed, timezone.get_current_timezone())
-
-    # Drop the client-provided offset to keep the local value exactly as entered.
-    naive_local = parsed.replace(tzinfo=None)
-    return timezone.make_aware(naive_local, timezone.get_current_timezone())
-
-
-def _initialize_dashboard_state(request):
-    """Prepare base state (forms, flags) for the dashboard view."""
-    section = request.GET.get("section", "overview")
-    show_category_form = request.GET.get("show") == "category-form"
-    show_service_form = request.GET.get("show") == "service-form"
-    category_form = CategoryForm()
-    service_form = ServiceForm()
-    client_initial = (
-        {"linked_professional": request.user.pk}
-        if request.user.is_authenticated
-        else None
-    )
-    client_form = ClientForm(initial=client_initial)
-
-    service_id_param = _safe_int(request.GET.get("service_id"))
-    category_for_new_service = request.GET.get("category")
-
-    if service_id_param:
-        service_form, _ = prepare_service_form(service_id_param)
-        show_service_form = True
-        section = "services"
-    elif show_service_form and category_for_new_service:
-        if Category.objects.filter(pk=category_for_new_service).exists():
-            service_form = ServiceForm(initial={"category": category_for_new_service})
-            section = "services"
-
-    return {
-        "section": section,
-        "category_form": category_form,
-        "service_form": service_form,
-        "client_form": client_form,
-        "show_category_form": show_category_form,
-        "show_service_form": show_service_form,
-        "show_client_modal": False,
-        "calendar": None,
-    }
-
-
 def _handle_add_category(request, state):
     """Process category creation and toggle modal visibility."""
     state["section"] = "services"
     state["show_category_form"] = True
-    state["category_form"] = CategoryForm(request.POST)
-    if state["category_form"].is_valid():
-        state["category_form"].save()
+    form = CategoryForm(request.POST)
+    success, form = save_category_form(form)
+    state["category_form"] = form
+    if success:
         return redirect(f"{reverse('dashboard')}?section=services")
     return None
 
@@ -132,23 +79,11 @@ def _handle_add_client(request, state):
     """Create a new client for the professional, enforcing permissions."""
     state["section"] = "clients"
     state["show_client_modal"] = True
-    client_data = request.POST.copy()
-    client_data["linked_professional"] = request.user.pk
-    client_form = ClientForm(client_data)
-    state["client_form"] = client_form
-    if not request.user.is_professional:
-        client_form.add_error(
-            None, "Vous devez être un professionnel pour ajouter un client."
-        )
-        return None
-
-    if client_form.is_valid():
-        client = client_form.save(commit=False)
-        client.user_type = User.UserType.INDIVIDUAL
-        client.linked_professional = request.user
-        client.set_password(get_random_string(12))
-        client.save()
+    success, result = create_client(request.user, request.POST)
+    if success:
         return redirect(f"{reverse('dashboard')}?section=clients")
+    # result is a bound form with errors
+    state["client_form"] = result if result is not None else ClientForm(request.POST)
     return None
 
 
@@ -159,23 +94,15 @@ def _handle_update_client(request, state):
     if not client_id:
         messages.error(request, "Client introuvable.")
         return None
-
-    client = User.objects.filter(
-        pk=client_id,
-        linked_professional=request.user,
-        user_type=User.UserType.INDIVIDUAL,
-    ).first()
-    if not client:
+    success, result = update_client(request.user, client_id, request.POST)
+    state["show_client_modal"] = True
+    if success:
+        return redirect(f"{reverse('dashboard')}?section=clients")
+    # result may be None (not found/authorized) or a bound form with errors
+    if result is None:
         messages.error(request, "Client introuvable ou non autorisé.")
         return None
-
-    # Bind form to instance to perform validation and save
-    client_form = ClientForm(request.POST, instance=client)
-    state["client_form"] = client_form
-    state["show_client_modal"] = True
-    if client_form.is_valid():
-        client_form.save()
-        return redirect(f"{reverse('dashboard')}?section=clients")
+    state["client_form"] = result
     return None
 
 
@@ -186,17 +113,10 @@ def _handle_delete_client(request, state):
     if not client_id:
         messages.error(request, "Client introuvable.")
         return None
-
-    client = User.objects.filter(
-        pk=client_id,
-        linked_professional=request.user,
-        user_type=User.UserType.INDIVIDUAL,
-    ).first()
-    if not client:
-        messages.error(request, "Client introuvable ou non autorisé.")
+    success, message = service_delete_client(request.user, client_id)
+    if not success:
+        messages.error(request, message or "Client introuvable ou non autorisé.")
         return None
-
-    client.delete()
     messages.success(request, "Le client a été supprimé.")
     return redirect(f"{reverse('dashboard')}?section=clients")
 
@@ -215,27 +135,26 @@ def _handle_add_event(request, state):
 
     calendar = ensure_user_calendar(request.user)
     state["calendar"] = calendar
-    start_at_raw = request.POST.get("start_at")
-    end_at_raw = request.POST.get("end_at")
-    service_id = request.POST.get("service_id")
-    client_id = request.POST.get("client_id")
-    if not (start_at_raw and end_at_raw and service_id and client_id):
+    form = EventForm(request.POST)
+    if not form.is_valid():
         messages.error(
             request,
             "Veuillez sélectionner un horaire, une prestation et un client.",
         )
         return None
 
-    event_created = _create_event_from_form(
-        request.user, calendar, start_at_raw, end_at_raw, service_id, client_id
+    success, result = create_event(
+        request.user,
+        calendar,
+        form.cleaned_data["start_at"],
+        form.cleaned_data["end_at"],
+        form.cleaned_data["service_id"],
+        form.cleaned_data["client_id"],
     )
-    if event_created:
+    if success:
         return redirect(f"{reverse('dashboard')}?section=planning")
 
-    messages.error(
-        request,
-        "Impossible de créer le rendez-vous. Vérifiez les informations fournies.",
-    )
+    messages.error(request, result or "Impossible de créer le rendez-vous. Vérifiez les informations fournies.")
     return None
 
 
@@ -255,19 +174,14 @@ def _handle_delete_event(request, state):
         messages.error(request, "Rendez-vous introuvable.")
         return None
 
-    event = (
-        Event.objects.select_related("calendar", "calendar__owner")
-        .filter(pk=event_id, calendar__owner=request.user)
-        .first()
-    )
-    if not event:
+    success, message = delete_event(request.user, event_id)
+    if not success:
         messages.error(
             request,
-            "Vous ne pouvez supprimer que les rendez-vous appartenant à votre agenda.",
+            message or "Vous ne pouvez supprimer que les rendez-vous appartenant à votre agenda.",
         )
         return None
 
-    event.delete()
     messages.success(request, "Le rendez-vous a été supprimé.")
     return redirect(f"{reverse('dashboard')}?section=planning")
 
@@ -279,98 +193,6 @@ def _dispatch_dashboard_action(request, state) -> HttpResponse | None:
     if handler:
         return handler(request, state)
     return None
-
-
-def _build_dashboard_context(request, state):
-    """Aggregate all data needed to render the dashboard."""
-    calendar = state.get("calendar")
-    clients: list[dict[str, str]] = []
-    client_options: list[dict[str, str]] = []
-    user_services = []
-    is_professional = (
-        request.user.is_authenticated
-        and request.user.user_type == User.UserType.PROFESSIONAL
-    )
-
-    if request.user.is_authenticated:
-        if calendar is None:
-            calendar = ensure_user_calendar(request.user)
-            state["calendar"] = calendar
-        user_service_qs = Service.objects.filter(created_by=request.user).order_by(
-            "name"
-        )
-        categories = (
-            Category.objects.filter(services__created_by=request.user)
-            .prefetch_related(Prefetch("services", queryset=user_service_qs))
-            .distinct()
-        )
-        user_services = list(user_service_qs)
-        if is_professional:
-            client_queryset = User.objects.filter(
-                user_type=User.UserType.INDIVIDUAL,
-                linked_professional=request.user,
-            ).order_by("first_name", "last_name", "email")
-            for client in client_queryset:
-                full_name = (
-                    f"{client.first_name} {client.last_name}".strip()
-                ) or client.email
-                client_data = {
-                    "id": client.pk,
-                    "full_name": full_name,
-                    "email": client.email,
-                    "phone": getattr(client, "phone_number", "") or "—",
-                }
-                clients.append(client_data)
-                client_options.append(
-                    {
-                        "id": client.pk,
-                        "label": full_name,
-                    }
-                )
-    else:
-        categories = Category.objects.none()
-
-    try:
-        week_offset = int(request.GET.get("week_offset", "0"))
-    except (TypeError, ValueError):
-        week_offset = 0
-
-    today = timezone.localdate()
-    start_of_week = (
-        today - timedelta(days=today.weekday()) + timedelta(weeks=week_offset)
-    )
-    end_of_week = start_of_week + timedelta(days=6)
-    planner_week_summary = (
-        f"Semaine {start_of_week.isocalendar().week} · "
-        f"{start_of_week.strftime('%d/%m')} → {end_of_week.strftime('%d/%m')}"
-    )
-
-    planning_days = build_calendar_events(calendar, week_offset=week_offset)
-
-    context = {
-        "section": state["section"],
-        "categories": categories,
-        "category_form": state["category_form"],
-        "show_category_form": state["show_category_form"],
-        "show_category_modal": state["show_category_form"]
-        or bool(state["category_form"].errors),
-        "service_form": state["service_form"],
-        "show_service_form": state["show_service_form"],
-        "show_service_modal": state["show_service_form"]
-        or bool(state["service_form"].errors),
-        "client_form": state["client_form"],
-        "show_client_modal": state["show_client_modal"]
-        or bool(state["client_form"].errors),
-        "is_professional": is_professional,
-        "planner_hours": PLANNER_HOURS,
-        "planning_days": planning_days,
-        "week_offset": week_offset,
-        "planner_week_summary": planner_week_summary,
-        "user_services": user_services,
-        "clients": clients,
-        "client_options": client_options,
-    }
-    return context
 
 
 DASHBOARD_ACTION_HANDLERS = {
@@ -389,12 +211,15 @@ DASHBOARD_ACTION_HANDLERS = {
 @login_required
 def dashboard(request):
     """Render the dashboard and handle service/category management."""
-    state = _initialize_dashboard_state(request)
+    state = initialize_dashboard_state(request)
     if request.method == "POST":
         response = _dispatch_dashboard_action(request, state)
         if response:
             return response
-    context = _build_dashboard_context(request, state)
+    week_offset = _safe_int(request.GET.get("week_offset"))
+    if week_offset is None:
+        week_offset = 0
+    context = build_dashboard_context(request.user, state, week_offset)
     return render(request, "accounts/dashboard.html", context)
 
 
@@ -422,41 +247,3 @@ def workshop_detail(request, pk):
         "workshop_photo": workshop.photo or "img/elio-santos-5ZQn_gWKvLE-unsplash.jpg",
     }
     return render(request, "accounts/workshop_detail.html", context)
-
-
-def _create_event_from_form(
-    user, calendar, start_at_raw, end_at_raw, service_id, client_id
-):
-    """Return True if the event was created successfully."""
-    if not calendar:
-        return False
-    start_at = _parse_iso_datetime(start_at_raw)
-    if start_at is None:
-        return False
-    end_at = _parse_iso_datetime(end_at_raw)
-    if end_at is None:
-        end_at = start_at
-
-    service = Service.objects.filter(pk=service_id, created_by=user).first()
-    client = User.objects.filter(
-        pk=client_id,
-        linked_professional=user,
-        user_type=User.UserType.INDIVIDUAL,
-    ).first()
-    if not (service and client):
-        return False
-
-    if end_at <= start_at:
-        duration = service.duration_minutes or 60
-        end_at = start_at + timedelta(minutes=duration)
-    event = Event.objects.create(
-        calendar=calendar,
-        title=service.name,
-        description=service.description or "",
-        start_at=start_at,
-        end_at=end_at,
-        created_by=user,
-        status="planned",
-    )
-    EventAttendee.objects.create(event=event, user=client)
-    return True
