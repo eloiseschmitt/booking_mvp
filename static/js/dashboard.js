@@ -267,6 +267,7 @@ const initializeDashboard = () => {
       if (phone) phone.value = clientDetailModal.querySelector('[data-client-field="phone"]').textContent.trim() || '';
       if (actionInput) actionInput.value = 'update_client';
       if (clientIdInput) clientIdInput.value = clientId || '';
+      if (clientModalTitle) clientModalTitle.textContent = 'Modifier un client';
 
       clientDetailModalHandlers?.close();
       clientModalHandlers?.open();

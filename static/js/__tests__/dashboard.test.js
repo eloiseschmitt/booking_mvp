@@ -151,6 +151,7 @@ const buildDom = () => {
             data-event-description="Desc"
             data-event-status="Confirmé"
             data-event-created-by="Marie"
+            data-event-id="123"
             data-event-start="2024-04-01T08:00:00.000Z"
             data-event-end="2024-04-01T09:00:00.000Z">
             <span>10:00 – 11:00</span>
