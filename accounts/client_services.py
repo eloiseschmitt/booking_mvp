@@ -5,8 +5,9 @@ These keep business logic out of the views so handlers remain thin.
 
 from django.utils.crypto import get_random_string
 
-from .forms import ClientForm
 from users.models import User
+
+from .forms import ClientForm
 
 
 def create_client(user: User, data) -> tuple[bool, User | ClientForm]:
