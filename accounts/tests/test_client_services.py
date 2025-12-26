@@ -1,5 +1,5 @@
 """Unit tests for accounts.client_services."""
-
+from mixer.backend.django import mixer
 from django.test import TestCase
 
 from django.contrib.auth import get_user_model
@@ -11,18 +11,9 @@ User = get_user_model()
 
 class ClientServicesTests(TestCase):
     def setUp(self):
-        self.professional = User.objects.create_user(
-            email="pro@example.com",
-            password="pw",
-            user_type=User.UserType.PROFESSIONAL,
-        )
+        self.professional = mixer.blend(User, email="pro@example.com", user_type=User.UserType.PROFESSIONAL)
         # Individual users must be linked to a professional per model validation.
-        self.individual = User.objects.create_user(
-            email="individual@example.com",
-            password="pw",
-            user_type=User.UserType.INDIVIDUAL,
-            linked_professional=self.professional,
-        )
+        self.individual = mixer.blend(User, email="individual@example.com", user_type=User.UserType.INDIVIDUAL, linked_professional=self.professional)
 
     def test_create_client_by_professional_creates_user(self):
         payload = {

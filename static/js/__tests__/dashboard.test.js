@@ -1,6 +1,13 @@
 const { initializeDashboard } = require('../dashboard.js');
 
+const formatDateLabel = (date) =>
+  date.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' });
+
 const buildDom = () => {
+  const today = new Date();
+  const todayLabel = formatDateLabel(today);
+  const tomorrow = new Date(today.getTime() + 24 * 60 * 60 * 1000);
+  const tomorrowLabel = formatDateLabel(tomorrow);
   document.body.innerHTML = `
     <div class="kitlast-dashboard-sidebar">
       <button class="kitlast-dashboard-sidebar__toggle" data-section-target="services" aria-expanded="false"></button>
@@ -45,7 +52,10 @@ const buildDom = () => {
         <div data-event-field="status"></div>
         <div data-event-field="created_by"></div>
         <div data-event-field="description"></div>
-        <button type="button" data-event-delete></button>
+        <form>
+          <input type="hidden" data-event-field="event-id" />
+          <button type="button" data-event-delete></button>
+        </form>
       </div>
     </div>
 
@@ -54,9 +64,12 @@ const buildDom = () => {
       <div class="kitlast-modal__content">
         <form data-new-event-form>
           <input type="hidden" data-new-event-field="start-input" />
+          <input type="hidden" data-new-event-field="end-input" />
           <div data-new-event-field="date"></div>
           <div data-new-event-field="time"></div>
           <div data-new-event-field="message"></div>
+          <select data-new-event-field="start-select"></select>
+          <select data-new-event-field="end-select"></select>
           <select data-new-event-field="service">
             <option value="">Sélectionnez</option>
             <option value="1">Retouche</option>
@@ -101,6 +114,16 @@ const buildDom = () => {
       </tr>
     </table>
 
+    <div class="kitlast-modal" data-client-detail-modal hidden data-client-id="7">
+      <div class="kitlast-modal__overlay" data-modal-close></div>
+      <div class="kitlast-modal__content">
+        <div data-client-field="full_name">Elisa Toto</div>
+        <div data-client-field="phone">0600000000</div>
+        <div data-client-field="email">toto@email.com</div>
+        <button type="button" data-client-detail-edit>Modifier</button>
+      </div>
+    </div>
+
     <div class="kitlast-modal" data-client-delete-modal hidden>
       <div class="kitlast-modal__overlay" data-modal-close></div>
       <div class="kitlast-modal__content">
@@ -114,8 +137,8 @@ const buildDom = () => {
     </div>
 
     <div class="kitlast-planner__columns">
-      <div class="kitlast-planner__column" data-planner-column data-planner-date="01/04">
-        <div class="kitlast-planner__column-date">01/04</div>
+      <div class="kitlast-planner__column" data-planner-column data-planner-date="${todayLabel}">
+        <div class="kitlast-planner__column-date">${todayLabel}</div>
         <div class="kitlast-planner__timeline">
           <div class="kitlast-planner__event"
             data-planner-event
@@ -134,8 +157,8 @@ const buildDom = () => {
           </div>
         </div>
       </div>
-      <div class="kitlast-planner__column" data-planner-column data-planner-date="02/04">
-        <div class="kitlast-planner__column-date">02/04</div>
+      <div class="kitlast-planner__column" data-planner-column data-planner-date="${tomorrowLabel}">
+        <div class="kitlast-planner__column-date">${tomorrowLabel}</div>
         <div class="kitlast-planner__timeline"></div>
       </div>
     </div>
@@ -215,6 +238,39 @@ describe('dashboard.js modals', () => {
     expect(document.querySelector('[data-client-delete-name]').textContent).toBe('Elisa Toto');
     expect(document.querySelector('[data-client-delete-id]').value).toBe('7');
   });
+
+  test('escape closes open modals', () => {
+    const serviceModal = document.querySelector('[data-service-modal]');
+    const categoryModal = document.querySelector('[data-category-modal]');
+    categoryModal.removeAttribute('hidden');
+
+    expect(serviceModal.hasAttribute('hidden')).toBe(false);
+    expect(categoryModal.hasAttribute('hidden')).toBe(false);
+
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+
+    expect(serviceModal.hasAttribute('hidden')).toBe(true);
+    expect(categoryModal.hasAttribute('hidden')).toBe(true);
+  });
+
+  test('client detail edit button populates the client modal', () => {
+    const clientDetailModal = document.querySelector('[data-client-detail-modal]');
+    const editButton = clientDetailModal.querySelector('[data-client-detail-edit]');
+    const clientModal = document.querySelector('[data-testid="client-modal"]');
+
+    expect(clientDetailModal.hasAttribute('hidden')).toBe(true);
+    clientDetailModal.removeAttribute('hidden');
+    editButton.click();
+
+    expect(clientDetailModal.hasAttribute('hidden')).toBe(true);
+    expect(clientModal.hasAttribute('hidden')).toBe(false);
+    expect(document.getElementById('client-modal-title').textContent).toBe('Modifier un client');
+    expect(document.querySelector('input[name="first_name"]').value).toBe('Elisa');
+    expect(document.querySelector('input[name="last_name"]').value).toBe('Toto');
+    expect(document.querySelector('input[name="email"]').value).toBe('toto@email.com');
+    expect(document.querySelector('input[name="phone_number"]').value).toBe('0600000000');
+    expect(document.querySelector('[data-client-form-action]').value).toBe('update_client');
+  });
 });
 
 describe('dashboard.js planner interactions', () => {
@@ -258,5 +314,51 @@ describe('dashboard.js planner interactions', () => {
     clientSelect.dispatchEvent(new Event('change', { bubbles: true }));
 
     expect(submitButton.disabled).toBe(false);
+  });
+
+  test('changing end time before start time clamps the end selection', () => {
+    const timeline = document.querySelector('.kitlast-planner__timeline');
+    timeline.getBoundingClientRect = () => ({ top: 0, bottom: 600, height: 600, left: 0, right: 0, width: 0 });
+    timeline.dispatchEvent(new MouseEvent('click', { bubbles: true, clientY: 100 }));
+
+    const startSelect = document.querySelector('[data-new-event-field="start-select"]');
+    const endSelect = document.querySelector('[data-new-event-field="end-select"]');
+
+    startSelect.value = '10:00';
+    startSelect.dispatchEvent(new Event('change', { bubbles: true }));
+    endSelect.value = '09:00';
+    endSelect.dispatchEvent(new Event('change', { bubbles: true }));
+
+    expect(endSelect.value).toBe('10:15');
+    expect(document.querySelector('[data-new-event-field="end-input"]').value).not.toBe('');
+  });
+
+  test('day/week buttons toggle the planner layout', () => {
+    const columnsContainer = document.querySelector('.kitlast-planner__columns');
+    const dayButton = document.querySelector('[data-planner-action="day"]');
+    const weekButton = document.querySelector('[data-planner-action="week"]');
+    const columns = Array.from(document.querySelectorAll('[data-planner-column]'));
+
+    dayButton.click();
+    expect(columnsContainer.classList.contains('kitlast-planner__columns--single')).toBe(true);
+    expect(columns.filter((col) => !col.classList.contains('is-hidden')).length).toBe(1);
+
+    weekButton.click();
+    expect(columnsContainer.classList.contains('kitlast-planner__columns--single')).toBe(false);
+    expect(columns.filter((col) => !col.classList.contains('is-hidden')).length).toBe(2);
+  });
+
+  test('event delete button submits the form when event id is present', () => {
+    const plannerEvent = document.querySelector('[data-planner-event]');
+    plannerEvent.click();
+
+    const form = document.querySelector('[data-event-modal] form');
+    const submitSpy = jest.spyOn(form, 'submit').mockImplementation(() => {});
+    const deleteButton = document.querySelector('[data-event-delete]');
+
+    deleteButton.click();
+
+    expect(submitSpy).toHaveBeenCalled();
+    submitSpy.mockRestore();
   });
 });
